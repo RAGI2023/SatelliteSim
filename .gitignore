@@ -1,3 +1,4 @@
 venv/
 .vscode/
 .idea/
+Frontend/__pycache__/
