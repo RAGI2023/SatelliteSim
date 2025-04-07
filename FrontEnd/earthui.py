@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/untitled.ui'
+# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/myearthui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.widget = QtWidgets.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(100, 90, 571, 391))
+        self.widget.setGeometry(QtCore.QRect(10, 10, 771, 531))
         self.widget.setObjectName("widget")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)

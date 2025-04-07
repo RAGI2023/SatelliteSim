@@ -1,4 +1,4 @@
 venv/
 .vscode/
 .idea/
-Frontend/__pycache__/
+**/__pycache__/
