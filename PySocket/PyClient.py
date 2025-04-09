@@ -3,7 +3,7 @@ import socket
 #.connect连接→.send发送
 #尚未封装
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(("127.0.0.1", 12345))
+client_socket.connect(("10.21.183.174", 12345))
 #************************此处更改发送的信息**************************************
 message = "请求关闭"
 client_socket.send(message.encode('utf-8'))

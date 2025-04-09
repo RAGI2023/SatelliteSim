@@ -4,7 +4,7 @@ import socket
 #PS:主机.accept接受信号并返回一个元组,含有两个元素.一个是专门与客户端通信的socket,一个是客户端的地址.利用.recv读取收取到的信息
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(("127.0.0.1", 12345))
+server_socket.bind(("0.0.0.0", 12345))
 
 while True:
     try:
