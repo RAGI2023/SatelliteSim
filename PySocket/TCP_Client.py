@@ -5,7 +5,7 @@ import socket
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(("10.21.183.174", 12345))
 #************************此处更改发送的信息**************************************
-message = "请求关闭"
+message = "quit"
 client_socket.send(message.encode('utf-8'))
 
 #用于接受的服务器信息

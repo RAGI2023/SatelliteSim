@@ -280,8 +280,8 @@ class ClientApp(QWidget):
         '''
 		
         # 多线程工作
-        #self.thread = threading.Thread(target=self.client.receive_messages)
-        #self.thread.start()
+        self.thread = threading.Thread(target=self.client.receive_messages,dameon=True)
+        self.thread.start()
 
 
     def send_message(self):
@@ -314,3 +314,5 @@ PS:
 来自于`from PyQt5.QtCore import Qt, QObject, pyqtSignal` 中的pyqtSignal类
 
 3. 关于判断客户端和服务器连接的关闭：释放资源后（代码运行结束），会自动断开连接，服务器会判定客户端关闭
+
+4. 纯tm沙比，自己命名一个socket
