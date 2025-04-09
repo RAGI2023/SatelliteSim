@@ -55,9 +55,10 @@ class OpenGLWindow(QOpenGLWidget):
         self.setStyleSheet("background: transparent;")
         self.setUpdateBehavior(QOpenGLWidget.PartialUpdate)
 
+        # 定时器控制更新帧率
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_frame)
-        self.timer.start(16)
+        self.timer.start(16)  # 每16毫秒更新一次
 
     def initializeGL(self):
         glClearColor(1.0, 1.0, 1.0, 0.0)
@@ -87,17 +88,21 @@ class OpenGLWindow(QOpenGLWidget):
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
-        glTranslatef(0.0, 0.0, -7.0)
+        glTranslatef(0.0, 0.0, -7.0)  # 移动到适当的位置
         glRotatef(-20, 1.0, 0.0, 1.0)
         glRotatef(250, 0.0, 0.0, 1.0)
         glRotatef(320.0, 0.0, 1.0, 0.0)
 
         glColor3f(1.0, 1.0, 1.0)
-        self.draw_textured_sphere(1.5, 32, 32)
+        self.draw_textured_sphere(1.5, 32, 32)  # 绘制地球
 
+        # 绘制卫星轨道和卫星模型
         for sat in self.satellites:
             self.draw_orbit(sat.r, sat.inclination)
             self.draw_satellite_model(sat.x, sat.y, sat.z)
+
+        # 添加闪烁轨道，连接卫星1和卫星2（可以根据需要选择不同的卫星组合）
+        self.draw_blinking_arc_between(self.satellites[0], self.satellites[1])
 
     def update_frame(self):
         for sat in self.satellites:
@@ -180,10 +185,47 @@ class OpenGLWindow(QOpenGLWidget):
         glCallList(self.sat_display_list)
         glPopMatrix()
 
+    def draw_blinking_arc_between(self, sat1, sat2, segments=100):
+    # 计算闪烁的透明度
+        alpha = (math.sin(self.timer.remainingTime() * 0.001) + 1.0) * 0.5  # 时间控制透明度，控制闪烁频率
+
+        # 设置线条的颜色与透明度（红色闪烁）
+        glColor4f(1.0, 0.2, 0.2, alpha)
+        glLineWidth(3.0)
+
+        # 将卫星的位置作为球面坐标单位向量
+        p1 = np.array([sat1.x, sat1.y, sat1.z])
+        p2 = np.array([sat2.x, sat2.y, sat2.z])
+        
+        # 计算半径
+        r = np.linalg.norm(p1)
+        
+        # 防止除以零的情况
+        if r < 1e-6:
+            return  # 如果距离太小，直接返回，避免除以零
+
+        v1 = p1 / r
+        v2 = p2 / r
+
+        # 球面插值：slerp（球面线性插值）
+        glBegin(GL_LINE_STRIP)
+        for i in range(segments + 1):
+            t = i / segments
+            omega = np.arccos(np.clip(np.dot(v1, v2), -1.0, 1.0))
+            if omega < 1e-5:
+                interp = v1  # 如果角度非常小，直接使用第一个位置
+            else:
+                sin_omega = np.sin(omega)
+                interp = (np.sin((1 - t) * omega) * v1 + np.sin(t * omega) * v2) / sin_omega
+            interp_pos = interp * r
+            glVertex3f(*interp_pos)
+        glEnd()
+        glLineWidth(1.0)
+
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            self.makeCurrent()  # ✅ 加这行，确保当前 OpenGL 上下文活跃
-            # print("Mouse Pressed at:", event.x(), event.y())
+            self.makeCurrent()  # 确保当前 OpenGL 上下文活跃
             x = event.x()
             y = self.height() - event.y()
             modelview = glGetDoublev(GL_MODELVIEW_MATRIX)
@@ -204,7 +246,6 @@ class OpenGLWindow(QOpenGLWidget):
                 if dist < self.sat_scale * 3000:  # 放宽命中半径
                     sat.callback(sat)
                     break
-
 
     def on_satellite_clicked(self, sat):
         print(f"[Clicked] Satellite selected: {sat.name}")
