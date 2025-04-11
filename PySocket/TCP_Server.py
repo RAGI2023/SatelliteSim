@@ -20,7 +20,7 @@ while True:
         print(f"UTF-8 解码: {data.decode('utf-8')}")
         #print(f"GBK 解码: {data.decode('gbk')}")
         #************对输入信息的处理**********************************
-        if(data.decode('utf-8') == '请求关闭'):
+        if data.decode('utf-8') == 'quit':
             client_socket.close()
             server_socket.close()
             break
