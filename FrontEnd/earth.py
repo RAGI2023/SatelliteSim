@@ -10,11 +10,13 @@ from OpenGL.GLUT import *
 from PIL import Image
 from earthui import Ui_MainWindow
 import pyassimp
+import time
 
 
 class Satellite:
-    def __init__(self, name, r, inclination_deg, angle_deg, callback):
+    def __init__(self, name, index, r, inclination_deg, angle_deg, callback):
         self.name = name
+        self.index = index
         self.r = r
         self.inclination = math.radians(inclination_deg)
         self.angle = angle_deg
@@ -22,6 +24,7 @@ class Satellite:
         self.y = 0
         self.z = 0
         self.callback = callback
+
 
     def update_position(self, delta_deg):
         self.angle = (self.angle + delta_deg) % 360
@@ -60,6 +63,10 @@ class OpenGLWindow(QOpenGLWidget):
         self.timer.timeout.connect(self.update_frame)
         self.timer.start(16)  # 每16毫秒更新一次
 
+        # 初始轨道队列
+        self.orbitArray = []
+        # self.orbitArray = [0, 2, 1]
+
     def initializeGL(self):
         glClearColor(1.0, 1.0, 1.0, 0.0)
         glEnable(GL_DEPTH_TEST)
@@ -71,11 +78,12 @@ class OpenGLWindow(QOpenGLWidget):
         self.sat_texture = self.load_texture(self.sat_texture_path)
         self.load_satellite_model(self.sat_model_path)
 
-        # Init multiple satellites
+        # Init multiple satellites 
+        # index一定要按顺序来
         self.satellites = [
-            Satellite("Sat-A", 2.5, 45, 0, self.on_satellite_clicked),
-            Satellite("Sat-B", 2.8, 60, 90, self.on_satellite_clicked),
-            Satellite("Sat-C", 3.0, 30, 180, self.on_satellite_clicked),
+            Satellite("Sat-A", 0, 2.5, 45, 0, self.on_satellite_clicked),
+            Satellite("Sat-B", 1, 2.8, 60, 90, self.on_satellite_clicked),
+            Satellite("Sat-C", 2, 3.0, 30, 180, self.on_satellite_clicked),
         ]
 
     def resizeGL(self, w, h):
@@ -101,8 +109,10 @@ class OpenGLWindow(QOpenGLWidget):
             self.draw_orbit(sat.r, sat.inclination)
             self.draw_satellite_model(sat.x, sat.y, sat.z)
 
-        # 添加闪烁轨道，连接卫星1和卫星2（可以根据需要选择不同的卫星组合）
-        self.draw_blinking_arc_between(self.satellites[0], self.satellites[1])
+        # 添加闪烁轨道
+        for i in range(len(self.orbitArray) - 1):
+            self.draw_blinking_arc_between(self.satellites[self.orbitArray[i]], self.satellites[self.orbitArray[i+1]])
+        # self.draw_blinking_arc_between(self.satellites[0], self.satellites[1])
 
     def update_frame(self):
         for sat in self.satellites:
@@ -185,6 +195,13 @@ class OpenGLWindow(QOpenGLWidget):
         glCallList(self.sat_display_list)
         glPopMatrix()
 
+    def get_blink_alpha(self, speed=5.0):
+            """
+            计算一个在 0~1 之间循环变化的 alpha 值，用于控制闪烁透明度。
+            参数 speed 控制闪烁速度，值越大越快。
+            """
+            return (math.sin(time.time() * speed) + 1.0) * 0.5
+
     def draw_blinking_arc_between(self, sat1, sat2, segments=100):
     # 计算闪烁的透明度
         alpha = (math.sin(self.timer.remainingTime() * 0.001) + 1.0) * 0.5  # 时间控制透明度，控制闪烁频率
@@ -198,7 +215,9 @@ class OpenGLWindow(QOpenGLWidget):
         p2 = np.array([sat2.x, sat2.y, sat2.z])
         
         # 计算半径
-        r = np.linalg.norm(p1)
+        r1 = np.linalg.norm(p1)
+        r2 = np.linalg.norm(p2)
+        r = (r1 + r2) / 2.0
         
         # 防止除以零的情况
         if r < 1e-6:
@@ -248,7 +267,8 @@ class OpenGLWindow(QOpenGLWidget):
                     break
 
     def on_satellite_clicked(self, sat):
-        print(f"[Clicked] Satellite selected: {sat.name}")
+        print(f"[Clicked] Satellite selected: {sat.name}:{sat.index}, click count = {self.clickCount}")
+        
 
 
 class MainWindow(QMainWindow):
