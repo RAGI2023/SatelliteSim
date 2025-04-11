@@ -11,10 +11,22 @@ from PIL import Image
 from earthui import Ui_MainWindow
 import pyassimp
 import time
+import Client
 
 
 class Satellite:
-    def __init__(self, name, index, r, inclination_deg, angle_deg, callback):
+    def __init__(self, name, index, r, inclination_deg, angle_deg, delta_deg, callback):
+        """初始化卫星对象
+
+        Args:
+            name (str): 卫星名称，可重复
+            index (int): 编号，不可重复
+            r (float): 轨道半径
+            inclination_deg (_type_): 轨道倾角，单位为度（°），表示卫星轨道与赤道的夹角
+            angle_deg (_type_): 初始相位角，单位为度（°），表示卫星在轨道上的位置
+            delta_deg (_type_): 每帧旋转的角度，单位为度（°）
+            callback (function): 点击卫星触发的回调函数（未启用）
+        """
         self.name = name
         self.index = index
         self.r = r
@@ -23,11 +35,12 @@ class Satellite:
         self.x = 0
         self.y = 0
         self.z = 0
+        self.delta_deg = delta_deg
         self.callback = callback
 
 
-    def update_position(self, delta_deg):
-        self.angle = (self.angle + delta_deg) % 360
+    def update_position(self):
+        self.angle = (self.angle + self.delta_deg) % 360
         angle_rad = math.radians(self.angle)
         self.x = self.r * math.cos(angle_rad)
         self.y = self.r * math.sin(angle_rad) * math.cos(self.inclination)
@@ -61,11 +74,14 @@ class OpenGLWindow(QOpenGLWidget):
         # 定时器控制更新帧率
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_frame)
-        self.timer.start(16)  # 每16毫秒更新一次
+        self.update_delta_t = 16
+        self.timer.start(self.update_delta_t)  # 每16毫秒更新一次
 
         # 初始轨道队列
-        self.orbitArray = []
+        self.orbitQueue = []
         # self.orbitArray = [0, 2, 1]
+
+        self.clickQueue = []
 
     def initializeGL(self):
         glClearColor(1.0, 1.0, 1.0, 0.0)
@@ -81,9 +97,9 @@ class OpenGLWindow(QOpenGLWidget):
         # Init multiple satellites 
         # index一定要按顺序来
         self.satellites = [
-            Satellite("Sat-A", 0, 2.5, 45, 0, self.on_satellite_clicked),
-            Satellite("Sat-B", 1, 2.8, 60, 90, self.on_satellite_clicked),
-            Satellite("Sat-C", 2, 3.0, 30, 180, self.on_satellite_clicked),
+            Satellite("Sat-A", 0, 2.5, 45, 0, 0.2, self.on_satellite_clicked),
+            Satellite("Sat-B", 1, 2.8, 60, 90, 0.2, self.on_satellite_clicked),
+            Satellite("Sat-C", 2, 3.0, 30, 180, 0.2, self.on_satellite_clicked),
         ]
 
     def resizeGL(self, w, h):
@@ -110,13 +126,13 @@ class OpenGLWindow(QOpenGLWidget):
             self.draw_satellite_model(sat.x, sat.y, sat.z)
 
         # 添加闪烁轨道
-        for i in range(len(self.orbitArray) - 1):
-            self.draw_blinking_arc_between(self.satellites[self.orbitArray[i]], self.satellites[self.orbitArray[i+1]])
+        for i in range(len(self.orbitQueue) - 1):
+            self.draw_blinking_arc_between(self.satellites[self.orbitQueue[i]], self.satellites[self.orbitQueue[i+1]])
         # self.draw_blinking_arc_between(self.satellites[0], self.satellites[1])
 
     def update_frame(self):
         for sat in self.satellites:
-            sat.update_position(0.2)
+            sat.update_position()
         self.update()
 
     def load_texture(self, texture_file):
@@ -267,7 +283,8 @@ class OpenGLWindow(QOpenGLWidget):
                     break
 
     def on_satellite_clicked(self, sat):
-        print(f"[Clicked] Satellite selected: {sat.name}:{sat.index}, click count = {self.clickCount}")
+        print(f"[Clicked] Satellite selected: {sat.name}:{sat.index}")
+        self.clickQueue.append(sat.index)
         
 
 
@@ -295,6 +312,41 @@ class MainWindow(QMainWindow):
         palette.setColor(self.ui.widget.backgroundRole(), self.palette().color(self.backgroundRole()))
         self.ui.widget.setPalette(palette)
         self.ui.widget.setAutoFillBackground(True)
+
+        self.ui.SelectSatellites.clicked.connect(self.SelectSatellitesClicked)
+        
+        # 通信链路规划
+        self.orbitClient = Client.socket_client('127.0.0.1', 12345, self.orbitRoute_cb)
+
+    def SelectSatellitesClicked(self):
+        if (len(self.opengl_widget.clickQueue) < 2):
+            print("Click more satellites...")
+            return
+        index1 = self.opengl_widget.clickQueue[-2]
+        index2 = self.opengl_widget.clickQueue[-1]
+        print(self.opengl_widget.clickQueue)
+        all_message = ""
+        for sat in self.opengl_widget.satellites:
+            message = f"Satellite {sat.index}: {sat.name}, Position: ({sat.r}, {sat.angle:.2f}, {1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg:.2f})"
+            all_message += message + "\n"
+        all_message += f"{self.opengl_widget.clickQueue[index1]}\n"
+        all_message += f"{self.opengl_widget.clickQueue[index2]}\n"
+
+        print("[发送一次] →\n", all_message)
+        self.orbitClient.send_message(all_message.strip())  # 发送全部信息
+
+    def orbitRoute_cb(self, msg):
+        print("收到服务端回复：", msg)
+        try:
+            parts = msg.strip().split()
+            if len(parts):
+                sat_queue = [int(x) for x in msg.strip().split()]
+                print(f"成功解析索引：", sat_queue)
+                self.opengl_widget.orbitQueue = sat_queue
+            else:
+                print("⚠️ 回复格式错误，期望两个整数")
+        except ValueError:
+            print("❌ 无法转换为整数")
 
 
 def main():

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/myearthui.ui'
+# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/earthui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -14,15 +14,18 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
+        MainWindow.resize(1194, 766)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.widget = QtWidgets.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(10, 10, 771, 531))
+        self.widget.setGeometry(QtCore.QRect(230, 80, 771, 531))
         self.widget.setObjectName("widget")
+        self.SelectSatellites = QtWidgets.QPushButton(self.centralwidget)
+        self.SelectSatellites.setGeometry(QtCore.QRect(0, 100, 181, 31))
+        self.SelectSatellites.setObjectName("SelectSatellites")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 28))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1194, 28))
         self.menubar.setObjectName("menubar")
         self.menuEarth = QtWidgets.QMenu(self.menubar)
         self.menuEarth.setObjectName("menuEarth")
@@ -38,4 +41,5 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.SelectSatellites.setText(_translate("MainWindow", "Send Selected Satellites"))
         self.menuEarth.setTitle(_translate("MainWindow", "Earth"))

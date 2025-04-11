@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1194</width>
+    <height>766</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,11 +17,24 @@
    <widget class="QWidget" name="widget" native="true">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
+      <x>230</x>
+      <y>80</y>
       <width>771</width>
       <height>531</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="SelectSatellites">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>100</y>
+      <width>181</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Send Selected Satellites</string>
     </property>
    </widget>
   </widget>
@@ -30,7 +43,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1194</width>
      <height>28</height>
     </rect>
    </property>
@@ -44,5 +57,22 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>SelectSatellites</sender>
+   <signal>clicked()</signal>
+   <receiver>widget</receiver>
+   <slot>update()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>90</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>615</x>
+     <y>373</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
