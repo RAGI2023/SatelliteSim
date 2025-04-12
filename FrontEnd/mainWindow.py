@@ -23,6 +23,9 @@ class Ui_MainWindow(object):
         self.SelectSatellites = QtWidgets.QPushButton(self.centralwidget)
         self.SelectSatellites.setGeometry(QtCore.QRect(0, 100, 181, 31))
         self.SelectSatellites.setObjectName("SelectSatellites")
+        self.newwindow_bt = QtWidgets.QPushButton(self.centralwidget)
+        self.newwindow_bt.setGeometry(QtCore.QRect(10, 150, 121, 31))
+        self.newwindow_bt.setObjectName("newwindow_bt")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1194, 28))
@@ -42,4 +45,5 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.SelectSatellites.setText(_translate("MainWindow", "Send Selected Satellites"))
+        self.newwindow_bt.setText(_translate("MainWindow", "newWindow"))
         self.menuEarth.setTitle(_translate("MainWindow", "Earth"))

@@ -37,6 +37,19 @@
      <string>Send Selected Satellites</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="newwindow_bt">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>150</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>newWindow</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -57,22 +70,5 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>SelectSatellites</sender>
-   <signal>clicked()</signal>
-   <receiver>widget</receiver>
-   <slot>update()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>90</x>
-     <y>143</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>615</x>
-     <y>373</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

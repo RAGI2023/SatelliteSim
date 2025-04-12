@@ -1,18 +1,13 @@
-import sys
 import math
+from PIL import Image
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QOpenGLWidget
+import pyassimp
+import time
+from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QSurfaceFormat
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-from PIL import Image
-from earthui import Ui_MainWindow
-import pyassimp
-import time
-import Client
-
 
 class Satellite:
     def __init__(self, name, index, r, inclination_deg, angle_deg, delta_deg, callback):
@@ -286,79 +281,3 @@ class OpenGLWindow(QOpenGLWidget):
         print(f"[Clicked] Satellite selected: {sat.name}:{sat.index}")
         self.clickQueue.append(sat.index)
         
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setStyleSheet("background-color: white;")
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
-
-        self.ui.widget.setAutoFillBackground(False)
-
-        self.opengl_widget = OpenGLWindow(
-            "texture/8k_earth_daymap.jpg",
-            "models/satellite/10477_Satellite_v1_L3.obj",
-            "models/satellite/10477_Satellite_v1_Diffuse.jpg",
-            parent=self.ui.widget
-        )
-
-        layout = QVBoxLayout(self.ui.widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.opengl_widget)
-
-        palette = self.ui.widget.palette()
-        palette.setColor(self.ui.widget.backgroundRole(), self.palette().color(self.backgroundRole()))
-        self.ui.widget.setPalette(palette)
-        self.ui.widget.setAutoFillBackground(True)
-
-        self.ui.SelectSatellites.clicked.connect(self.SelectSatellitesClicked)
-        
-        # 通信链路规划
-        self.orbitClient = Client.socket_client('127.0.0.1', 12345, self.orbitRoute_cb)
-
-    def SelectSatellitesClicked(self):
-        if (len(self.opengl_widget.clickQueue) < 2):
-            print("Click more satellites...")
-            return
-        index1 = self.opengl_widget.clickQueue[-2]
-        index2 = self.opengl_widget.clickQueue[-1]
-        print(self.opengl_widget.clickQueue)
-        all_message = ""
-        for sat in self.opengl_widget.satellites:
-            message = f"Satellite {sat.index}: {sat.name}, Position: ({sat.r}, {sat.angle:.2f}, {1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg:.2f})"
-            all_message += message + "\n"
-        all_message += f"{self.opengl_widget.clickQueue[index1]}\n"
-        all_message += f"{self.opengl_widget.clickQueue[index2]}\n"
-
-        print("[发送一次] →\n", all_message)
-        self.orbitClient.send_message(all_message.strip())  # 发送全部信息
-
-    def orbitRoute_cb(self, msg):
-        print("收到服务端回复：", msg)
-        try:
-            parts = msg.strip().split()
-            if len(parts):
-                sat_queue = [int(x) for x in msg.strip().split()]
-                print(f"成功解析索引：", sat_queue)
-                self.opengl_widget.orbitQueue = sat_queue
-            else:
-                print("⚠️ 回复格式错误，期望两个整数")
-        except ValueError:
-            print("❌ 无法转换为整数")
-
-
-def main():
-    fmt = QSurfaceFormat()
-    fmt.setAlphaBufferSize(8)
-    QSurfaceFormat.setDefaultFormat(fmt)
-
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    main()
