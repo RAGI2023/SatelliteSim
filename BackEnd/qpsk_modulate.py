@@ -23,15 +23,3 @@ def qpsk_modulate(bit_seq, carrier_freq=1000, sample_rate=10000, symbol_duration
         modulated_signal.extend(signal)
 
     return np.array(modulated_signal)
-
-# 示例调用
-if __name__ == "__main__":
-    # 模拟前端请求中的比特流
-    bitstream = np.random.randint(0, 2, 16)  # 16位比特
-    print("原始比特流:", bitstream)
-
-    # QPSK 调制
-    qpsk_signal = qpsk_modulate(bitstream)
-    print("QPSK 信号生成完毕，长度:", len(qpsk_signal))
-    for i in range(10):
-        print(qpsk_signal[i])

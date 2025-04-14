@@ -81,3 +81,141 @@ y = [0.0, 0.099, 0.198, 0.295]
 - 若数据格式错误或 `x`、`y` 数量不一致，客户端将忽略本次数据，并记录错误日志；
 
 ---
+
+## bpsk和qpsk编码：bpsk_modulate 和 pbsk_modulate
+
+### 接口信息
+
+```python
+def bpsk_modulate(bit_seq, carrier_freq=1000, sample_rate=10000, symbol_duration=0.01)
+```
+
+```python
+def qpsk_modulate(bit_seq, carrier_freq=1000, sample_rate=10000, symbol_duration=0.01)
+```
+
+#### 参数说明
+| 参数名            | 描述                      | 默认值 |
+| ----------------- | ------------------------- | ------ |
+| `bit_seq`         | 由0和1组成的字符串        | 无     |
+| `carrier_freq`    | 载波信号的频率（Hz）。    | 1000   |
+| `sample_rate`     | 采样率（Hz）              | 10000  |
+| `symbol_duration` | 每个比特的持续时间（s）。 | 0.01   |
+
+#### 返回值
+| 返回值             | 类型       | 描述                                                   |
+| ------------------ | ---------- | ------------------------------------------------------ |
+| `modulated_signal` | array-like | 经过 BPSK 调制后的信号，是一个包含调制后样本值的数组。 |
+
+#### 异常处理
+**`ValueError`**：如果输入的 `bit_seq` 中包含非 0 或 1 的元素，将抛出此异常。
+
+### 接受信息格式
+
+```python
+0110101010001010101010100000100111110......
+```
+
+### 发送信息格式
+
+以数组形式存储
+
+```
+[-1.         -0.80901699 -0.30901699  0.30901699  0.80901699  1.
+  0.80901699  0.30901699 -0.30901699 -0.80901699 -1.         -0.80901699
+ -0.30901699  0.30901699  0.80901699  1.          0.80901699  0.30901699
+ -0.30901699 -0.80901699 -1.         -0.80901699 -0.30901699  0.30901699
+  0.80901699  1.          0.80901699  0.30901699 -0.30901699 -0.80901699
+ -1.         -0.80901699 -0.30901699  0.30901699  0.80901699  1.
+  0.80901699  0.30901699 -0.30901699 -0.80901699 -1.         -0.80901699
+ -0.30901699  0.30901699  0.80901699  1.          0.80901699  0.30901699
+ -0.30901699 -0.80901699 -1.         -0.80901699 -0.30901699  0.30901699
+  0.80901699  1.          0.80901699  0.30901699 -0.30901699 -0.80901699
+ -1.         -0.80901699 -0.30901699  0.30901699  0.80901699  1.
+  0.80901699  0.30901699 -0.30901699 -0.80901699 -1.         -0.80901699
+ -0.30901699  0.30901699  0.80901699  1.          0.80901699  0.30901699
+ -0.30901699 -0.80901699 -1.         -0.80901699 -0.30901699  0.30901699
+  0.80901699  1.          0.80901699  0.30901699 -0.30901699 -0.80901699
+ -1.         -0.80901699 -0.30901699  0.30901699  0.80901699  1.
+  0.80901699  0.30901699 -0.30901699 -0.80901699]
+```
+
+### 测试用例
+
+```python
+if __name__ == "__main__":
+    # 模拟前端请求中的比特流
+    bitstream = np.random.randint(0, 2, 16)
+    print("原始比特流:", bitstream)
+    bpsk_signal = bpsk_modulate(bitstream)
+    print("长度:", len(bpsk_signal))
+    print(bpsk_signal)
+```
+
+```python
+if __name__ == "__main__":
+    # 模拟前端请求中的比特流
+    bitstream = np.random.randint(0, 2, 16)
+    print("原始比特流:", bitstream)
+    qpsk_signal = qpsk_modulate(bitstream)
+    print(qpsk_signal[i])
+```
+
+
+
+## 规划卫星路径：plan_satellite_path
+
+### 接口信息
+
+```python
+plan_satellite_path(messages)
+```
+
+### 接受信息格式
+
+```python
+f{
+    "Satellite {sat.index}: {sat.name}, Position: ({sat.r}, {sat.angle:.2f}, {1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg:.2f",
+    "Satellite {sat.index}: {sat.name}, Position: ({sat.r}, {sat.angle:.2f}, {1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg:.2f",
+    "Satellite {sat.index}: {sat.name}, Position: ({sat.r}, {sat.angle:.2f}, {1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg:.2f"
+    #......
+}
+```
+
+示例
+
+```python
+messages = [
+    "Satellite 1: Alpha, Position: (7000, 45.00, 2.50)",
+    "Satellite 2: Beta, Position: (7100, 90.00, 2.30)",
+    "Satellite 3: Gamma, Position: (7050, 135.00, 2.40)"
+]
+```
+
+### 发送信息格式
+
+```python
+"{sat1} {sat2} {sat3} {sat4} ..."
+```
+
+示例
+
+```python
+1 2 3
+```
+
+### 测试用例
+
+```python
+if __name__ == '__main__':
+	# 示例输入
+    messages = [
+        "Satellite 1: Alpha, Position: (7000, 45.00, 2.50)",
+        "Satellite 2: Beta, Position: (7100, 90.00, 2.30)",
+        "Satellite 3: Gamma, Position: (7050, 135.00, 2.40)"
+    ]
+
+    # 调用函数
+    path = plan_satellite_path(messages, sort_by="angle")
+    print("推荐路径:", path)
+```
