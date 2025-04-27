@@ -184,10 +184,10 @@ class OpenGLWindow(QOpenGLWidget):
 
         self.sat_display_list = glGenLists(1)
         glNewList(self.sat_display_list, GL_COMPILE)
-        self._draw_satellite_raw()
+        self.draw_satellite_raw()
         glEndList()
 
-    def _draw_satellite_raw(self):
+    def draw_satellite_raw(self):
         glBegin(GL_TRIANGLES)
         has_tex = len(self.sat_texcoords) > 0
         for face in self.sat_faces:
@@ -215,7 +215,7 @@ class OpenGLWindow(QOpenGLWidget):
 
     def draw_blinking_arc_between(self, sat1, sat2, segments=100):
     # 计算闪烁的透明度
-        alpha = (math.sin(self.timer.remainingTime() * 0.001) + 1.0) * 0.5  # 时间控制透明度，控制闪烁频率
+        alpha = self.get_blink_alpha()  # 时间控制透明度，控制闪烁频率
 
         # 设置线条的颜色与透明度（红色闪烁）
         glColor4f(1.0, 0.2, 0.2, alpha)

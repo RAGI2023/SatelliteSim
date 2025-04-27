@@ -4,16 +4,12 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QSurfaceFormat
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
 from mainWindow import Ui_MainWindow
 from watcher import Ui_Watcher
-import Client
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from openGLwidget import OpenGLWindow
-
+import json
 
 class WatcherWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -79,29 +75,28 @@ class MainWindow(QMainWindow):
         self.ui.SelectSatellites.clicked.connect(self.SelectSatellitesClicked)
         self.ui.newwindow_bt.clicked.connect(self.show_new_window)
         
-        # 通信链路规划
-        self.orbitClient = Client.socket_client('127.0.0.1', 12345, self.orbitRoute_cb)
-        # self.orbitClient.connect()
-
-        # 接受示波器数据
-        self.watcherClient = Client.socket_client('127.0.0.1', 12346, self.watcher_cb)
-        
     def SelectSatellitesClicked(self):
         if (len(self.opengl_widget.clickQueue) < 2):
             print("Click more satellites...")
             return
         index1 = self.opengl_widget.clickQueue[-2]
         index2 = self.opengl_widget.clickQueue[-1]
-        print(self.opengl_widget.clickQueue)
-        all_message = ""
-        for sat in self.opengl_widget.satellites:
-            message = f"Satellite {sat.index}: {sat.name}, Position: ({sat.r}, {sat.angle:.2f}, {1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg:.2f})"
-            all_message += message + "\n"
-        all_message += f"{self.opengl_widget.clickQueue[index1]}\n"
-        all_message += f"{self.opengl_widget.clickQueue[index2]}\n"
+        # message = {
+        #     "satellites": [],
+        #     "start": [index1],
+        #     "end": [index2],
+        # }
 
-        print("[发送一次] →\n", all_message)
-        self.orbitClient.send_message(all_message.strip())  # 发送全部信息
+        # for sat in self.opengl_widget.satellites:
+        #     sat_data = {
+        #         "index": sat.index,
+        #         "name": sat.name,
+        #         "r": sat.r,
+        #         "angle": round(sat.angle, 2),
+        #         "speed": round(1000.0 / self.opengl_widget.update_delta_t * sat.delta_deg, 2)
+        #     }
+        #     message["satellites"].append(sat_data)
+
 
     def show_new_window(self):
         self.watcher_window = WatcherWindow()
@@ -113,15 +108,14 @@ class MainWindow(QMainWindow):
     def orbitRoute_cb(self, msg):
         print("收到服务端回复：", msg)
         try:
-            parts = msg.strip().split()
-            if len(parts):
-                sat_queue = [int(x) for x in msg.strip().split()]
-                print(f"成功解析索引：", sat_queue)
+            data = json.loads(msg)  # 解析 JSON 字符串
+            if "path" in data and isinstance(data["path"], list):
+                sat_queue = [int(x) for x in data["path"]]  # 确保每个是整数
                 self.opengl_widget.orbitQueue = sat_queue
             else:
-                print("⚠️ 回复格式错误，期望两个整数")
-        except ValueError:
-            print("❌ 无法转换为整数")
+                print("回复格式错误，缺少 'path' 字段或格式不正确")
+        except (json.JSONDecodeError, ValueError) as e:
+            print("无法解析 JSON 或转换为整数：", e)
 
     def watcher_cb(self, message: str):
         """
