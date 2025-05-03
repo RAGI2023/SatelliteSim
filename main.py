@@ -4,11 +4,11 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QSurfaceFormat
-from FrontEnd.mainWindow import Ui_MainWindow
-from FrontEnd.watcher import Ui_Watcher
+from FrontEnd.mainWindow.mainWindow import Ui_MainWindow
+from FrontEnd.watcher.watcher import Ui_Watcher
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from FrontEnd.openGLwidget import OpenGLWindow
+from FrontEnd.mainWindow.openGLwidget import OpenGLWindow
 import json
 import BackEnd.plan_satellite_path as plan_satellite_path
 import BackEnd.bpsk as bpsk
@@ -40,7 +40,7 @@ class WatcherWindow(QtWidgets.QWidget):
 
 
 
-    def showORhidePlt1(self, show, show_slide = True):
+    def showPlt1(self, show, show_slide = True):
         if show:
             self.ui.subplt1.show()
             self.ui.subtitle1.show()
@@ -51,7 +51,7 @@ class WatcherWindow(QtWidgets.QWidget):
             self.ui.subtitle1.hide()
             self.ui.subSlider1.hide()
 
-    def showORhidePlt2(self, show, show_slide = True):
+    def showPlt2(self, show, show_slide = True):
         if show:
             self.ui.subplt2.show()
             self.ui.subtitle2.show()
@@ -62,7 +62,7 @@ class WatcherWindow(QtWidgets.QWidget):
             self.ui.subtitle2.hide()
             self.ui.subSlider2.hide()
     
-    def showORhideText1(self, show):
+    def showText1(self, show):
         if show:
             self.ui.text1.show()
         else:
@@ -126,6 +126,45 @@ class WatcherWindow(QtWidgets.QWidget):
             self.ax1.grid()
         self.canvas1.draw()  # 重绘
 
+    def widgetPlot2(self, x, y, title = "", xlabel = "x", ylabel = "y", grid = True):
+        """
+        绘制图像
+        Args:
+            x (array-like): x轴数据
+            y (array-like): y轴数据
+            title (str, optional): 图像标题. Defaults to "".
+            xlabel (str, optional): 横轴标签. Defaults to "x".
+            ylabel (str, optional): 纵轴标签. Defaults to "y".
+            grid (bool, optional): 是否显示网格. Defaults to True.
+        """
+        # layout = QVBoxLayout(self.ui.subplt1)  # 把 layout 加到你设置的 subplt1 上
+        # fig = Figure(figsize=(4, 3))
+        # canvas = FigureCanvas(fig)
+        # ax = fig.add_subplot(111)
+
+        # try:
+        #     ax.plot(x, y)
+        #     ax.set_title(title)
+        #     ax.set_xlabel(xlabel)
+        #     ax.set_ylabel(ylabel)
+
+        #     if grid:
+        #         ax.grid()
+        # except:
+        #     print("无法绘制数据")
+        #     return
+        # layout.addWidget(canvas)
+        # canvas.draw()
+
+        self.ax2.clear()  # 清除旧图
+        self.ax2.plot(x, y)
+        self.ax2.set_title(title)
+        self.ax2.set_xlabel(xlabel)
+        self.ax2.set_ylabel(ylabel)
+        if grid:
+            self.ax2.grid()
+        self.canvas2.draw()  # 重绘
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -181,9 +220,18 @@ class MainWindow(QMainWindow):
 
         self.watcher_window.datas[0]["x"] = result[:, 0]
         self.watcher_window.datas[0]["y"] = result[:, 1]
-        self.watcher_window.DataSize_in_view = len(result[:, 0]) / 30
+        self.watcher_window.DataSize_in_view = int(len(result[:, 0]) / 30)
         self.watcher_window.show()
-        self.watcher_window.showORhideText1(False)
+        
+        self.watcher_window.widgetPlot1(
+            self.watcher_window.datas[0]["x"][0:self.watcher_window.DataSize_in_view],
+            self.watcher_window.datas[0]["y"][0:self.watcher_window.DataSize_in_view],
+        )
+
+        # 隐藏Text1
+        self.watcher_window.showText1(False)
+
+        # subplot1显示数据
 
     def orbitRoute_cb(self, msg):
         print("收到服务端回复：", msg)
