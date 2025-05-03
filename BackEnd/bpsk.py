@@ -52,3 +52,40 @@ if __name__ == "__main__":
 
     print("原始数据：", bits)
     print("调制后的数据：", demodulated_bits)
+
+    # 绘制整个调制信号波形
+    plt.figure(figsize=(12, 4))
+    plt.plot(result[:, 0], result[:, 1])
+    plt.title("BPSK Modulated Signal")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # 每个位对应的调制波形
+    samples_per_symbol = int(10000 * 0.01)  # sample_rate * symbol_duration
+    t = np.linspace(0, 0.01, samples_per_symbol)
+
+    fig, axs = plt.subplots(len(bits), 1, figsize=(8, len(bits)*1.2), sharex=True)
+    for i, bit in enumerate(bits):
+        segment = result[i*samples_per_symbol : (i+1)*samples_per_symbol, 1]
+        axs[i].plot(t, segment)
+        axs[i].set_ylabel(f"bit {i}: {bit}")
+        axs[i].grid(True)
+    axs[-1].set_xlabel("Time (s)")
+    plt.suptitle("Each Bit's BPSK Waveform")
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.show()
+
+    # 原始与解调结果对比
+    plt.figure(figsize=(6, 2))
+    plt.plot(bits, 'o-', label='Original Bits')
+    plt.plot(demodulated_bits, 'x--', label='Demodulated Bits')
+    plt.title("Original vs Demodulated Bits")
+    plt.xticks(range(len(bits)))
+    plt.yticks([0, 1])
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()

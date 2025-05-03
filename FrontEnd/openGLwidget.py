@@ -278,6 +278,9 @@ class OpenGLWindow(QOpenGLWidget):
                     break
 
     def on_satellite_clicked(self, sat):
+        # 去除重复
+        if len(self.clickQueue) and self.clickQueue[-1] == sat.index:
+            return
         print(f"[Clicked] Satellite selected: {sat.name}:{sat.index}")
         self.clickQueue.append(sat.index)
         
