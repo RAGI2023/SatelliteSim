@@ -50,6 +50,19 @@
      <string>newWindow</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="input_btn">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>220</y>
+      <width>89</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Set Input</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/earthui.ui'
+# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/mainWindow/mainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -26,6 +26,9 @@ class Ui_MainWindow(object):
         self.newwindow_bt = QtWidgets.QPushButton(self.centralwidget)
         self.newwindow_bt.setGeometry(QtCore.QRect(10, 150, 121, 31))
         self.newwindow_bt.setObjectName("newwindow_bt")
+        self.input_btn = QtWidgets.QPushButton(self.centralwidget)
+        self.input_btn.setGeometry(QtCore.QRect(30, 220, 89, 25))
+        self.input_btn.setObjectName("input_btn")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1194, 28))
@@ -46,4 +49,5 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.SelectSatellites.setText(_translate("MainWindow", "Send Selected Satellites"))
         self.newwindow_bt.setText(_translate("MainWindow", "newWindow"))
+        self.input_btn.setText(_translate("MainWindow", "Set Input"))
         self.menuEarth.setTitle(_translate("MainWindow", "Earth"))
