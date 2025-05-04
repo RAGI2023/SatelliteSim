@@ -1,12 +1,18 @@
 import binascii
+import numpy as np
 
 def crc32(data):
     """
-    计算数据的 CRC32 校验
-    :param data: 输入数据（字符串或字节流）
-    :return: CRC32 校验值
+    支持 str、bytes、numpy.ndarray 的通用 CRC32 校验函数
     """
-    return binascii.crc32(data.encode()) & 0xffffffff  # 使用 binascii 的 crc32 方法
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    elif isinstance(data, np.ndarray):
+        data = data.tobytes()
+    elif not isinstance(data, bytes):
+        raise TypeError(f"Unsupported data type: {type(data)}. Must be str, bytes, or numpy.ndarray.")
+    
+    return binascii.crc32(data) & 0xffffffff
 
 def parity_check(data, check_type="even"):
     """
@@ -27,3 +33,16 @@ def parity_check(data, check_type="even"):
     else:
         raise ValueError("校验类型应为 'even' 或 'odd'")
     
+def parity_check_auto(data, check_type="even"):
+    if isinstance(data, str):
+        bitlist = [int(b) for c in data.encode('utf-8') for b in format(c, '08b')]
+    elif isinstance(data, (bytes, bytearray)):
+        bitlist = [int(b) for byte in data for b in format(byte, '08b')]
+    elif isinstance(data, np.ndarray):
+        bitlist = [int(b) for byte in data.tobytes() for b in format(byte, '08b')]
+    elif isinstance(data, list) and all(x in (0, 1) for x in data):
+        bitlist = data
+    else:
+        raise TypeError("Unsupported data type for parity check")
+
+    return parity_check(bitlist, check_type)

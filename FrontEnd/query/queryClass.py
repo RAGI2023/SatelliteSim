@@ -1,8 +1,7 @@
 from FrontEnd.query.query import Ui_Dialog
-from PyQt5 import QtWidgets as Qt
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog
 
-class QueryWindow(Qt.QDialog):
+class QueryWindow(QDialog):
     def __init__(self):
         super().__init__()
         self.ui = Ui_Dialog()

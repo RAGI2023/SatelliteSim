@@ -1,5 +1,4 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from FrontEnd.watcher.watcher import Ui_Watcher
@@ -9,7 +8,7 @@ def ensure_data_key(datas, key):
     if key not in datas:
         datas[key] = {"x": [], "y": [], "DSPF": 0}
 
-class WatcherWindow(QtWidgets.QWidget):
+class WatcherWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.ui = Ui_Watcher()
@@ -18,7 +17,7 @@ class WatcherWindow(QtWidgets.QWidget):
         self.ui.subSlider2.valueChanged.connect(self.slider2_changed)
 
         # 模拟输入类型 “TEXT” “VOICE”
-        self.analog_type = ""
+        self.analog_input_type = ""
         self.currentComboBox = "AD"
         self.ui.watcherSelect.currentTextChanged.connect(self.watcherSelectChanged)
 
@@ -44,7 +43,70 @@ class WatcherWindow(QtWidgets.QWidget):
         根据选择更新显示内容
         """
         self.currentComboBox = value
+        if value == "AD":
+            if self.analog_input_type == "TEXT":
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+                text_data = self.datas.get("input_text", {}).get("x", "")
+                self.ui.text1.setText(str(text_data))
+                
+                hex_raw = binascii.hexlify(text_data.encode('utf-8')).decode('utf-8').upper()
+                hex_str = ' '.join(hex_raw[i:i+2] for i in range(0, len(hex_raw), 2))
+                self.ui.text2.setText(hex_str)
+            elif self.analog_input_type == "VOICE":
+                self.showPlt1(True)
+                self.showPlt2(True)
+                self.ui.text1.hide()
+                self.ui.text2.hide()
+                # 更新图表
+                voice_data_ana = self.datas.get("voice_analog", {})
+                x_data1 = voice_data_ana.get("x", [])
+                y_data1 = voice_data_ana.get("y", [])
+                data_size1 = self.datas["voice_analog"]["DSPF"]
 
+                voice_data_dis = self.datas.get("voice", {})
+                x_data2 = voice_data_dis.get("x", [])
+                y_data2 = voice_data_dis.get("y", [])
+                data_size2 = self.datas["voice"]["DSPF"]
+
+                self.widgetPlot1(x_data1[0:data_size1], y_data1[0:data_size1], "ANALOG")
+                self.widgetPlot2(x_data2[0:data_size2], y_data2[0:data_size2], "DIGITAL")
+        elif value == "CRC":
+            crc_data = self.datas.get("crc", {}).get("x", "")
+            if self.analog_input_type == "TEXT":
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+                self.ui.text1.setText(str(self.datas.get("input_text", {}).get("x", "")))
+            elif self.analog_input_type == "VOICE":
+                self.showPlt1(True)
+                self.showPlt2(False)
+                self.ui.text1.hide()
+                self.ui.text2.show()
+            hex_raw = binascii.hexlify(str(crc_data).encode()).decode().upper()
+            hex_str = ' '.join(hex_raw[i:i+2] for i in range(0, len(hex_raw), 2))
+            self.ui.text2.setText(hex_str)
+        elif value == "Parity Check-Odd" or value == "Parity Check-Even":
+            if value == "Parity Check-Odd":
+                parity_data = self.datas.get("parity_odd", {}).get("x", "")
+            else:
+                parity_data = self.datas.get("parity_even", {}).get("x", "")
+            
+            if self.analog_input_type == "TEXT":
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+                self.ui.text1.setText(str(self.datas.get("input_text", {}).get("x", "")))
+            elif self.analog_input_type == "VOICE":
+                self.showPlt1(True)
+                self.showPlt2(False)
+                self.ui.text1.hide()
+                self.ui.text2.show()
+            self.ui.text2.setText(str(parity_data))
     def showPlt1(self, show, show_slide = True):
         if show:
             self.ui.subplt1.show()
@@ -154,7 +216,7 @@ class WatcherWindow(QtWidgets.QWidget):
             # AD 类型查看
             if watcher_type == "AD":
                 # 当前输入类型（如 "TEXT" 或 "VOICE"）
-                input_type = self.analog_type
+                input_type = self.analog_input_type
                 
                 if input_type == "TEXT":
                     # 切换到文本页面

@@ -8,6 +8,7 @@ from FrontEnd.watcher.watcherClass import WatcherWindow, ensure_data_key
 import BackEnd.plan_satellite_path as plan_satellite_path
 import BackEnd.bpsk as bpsk
 import BackEnd.ADtrans as ADtrans
+import BackEnd.dsp as dsp
 import numpy as np
 import time
 
@@ -37,6 +38,9 @@ class MainWindow(QMainWindow):
         self.ui.widget.setPalette(palette)
         self.ui.widget.setAutoFillBackground(True)
 
+        self.ui.continue_btn.clicked.connect(self.process)
+        self.ui.continue_btn.setEnabled(False)
+
         self.ui.SelectSatellites.clicked.connect(self.SelectSatellitesClicked)
         # 显示watcher
         self.ui.newwindow_bt.clicked.connect(self.watcher_window.show_watcher_window)
@@ -48,6 +52,7 @@ class MainWindow(QMainWindow):
         """
         - 等待卫星:"SELECT-SAT"
         - 等待信号输入:"INPUT"
+        - 准备编码:"ENCODE"
         - 无缺失:"NONE"
         """
         self.status = "SELECT-SAT"
@@ -67,6 +72,61 @@ class MainWindow(QMainWindow):
 
         self.add_log("Simulation Begin.")
         
+    def process(self):
+        # 获取状态
+        status = self.status
+        if status == "ENCODE":
+            # 开始编码
+            self.add_log("Start encoding...")
+
+            print("开始编码")
+            self.encodeMethod = self.ui.encoderComboBox.currentText()
+            if self.encodeMethod == "CRC":
+                self.add_log("Using CRC encoding...")
+                print("使用CRC编码")
+                crc_out = None
+                # 进行CRC编码
+                if self.watcher_window.analog_input_type == "TEXT":
+                    crc_out = dsp.crc32(self.watcher_window.datas["input_text"]["x"])
+                elif self.watcher_window.analog_input_type == "VOICE":
+                    crc_out = dsp.crc32(self.watcher_window.datas["voice"]["y"].tobytes())
+                self.add_log(f"CRC32: {crc_out}")
+                ensure_data_key(self.watcher_window.datas, "crc")
+                self.watcher_window.datas["crc"]["x"] = crc_out
+                self.watcher_window.ui.watcherSelect.addItem("CRC")
+            elif self.encodeMethod == "Parity Check-Even":
+                self.add_log("Using Parity Check-Even encoding...")
+                print("使用偶校验编码")
+                # 进行偶校验编码
+                if self.watcher_window.analog_input_type == "TEXT":
+                    data = self.watcher_window.datas["input_text"]["x"]
+                    parity_bit = dsp.parity_check_auto(data, check_type="even")
+                    self.add_log(f"Parity Check-Even: {parity_bit}")
+                elif self.watcher_window.analog_input_type == "VOICE":
+                    data = self.watcher_window.datas["voice"]["y"]
+                    parity_bit = dsp.parity_check_auto(data, check_type="even")
+                    self.add_log(f"Parity Check-Even: {parity_bit}")
+                ensure_data_key(self.watcher_window.datas, "parity_even")
+                self.watcher_window.datas["parity_even"]["x"] = parity_bit
+                self.watcher_window.ui.watcherSelect.addItem("Parity Check-Even")
+            elif self.encodeMethod == "Parity Check-Odd":
+                self.add_log("Using Parity Check-Odd encoding...")
+                print("使用奇校验编码")
+                # 进行奇校验编码
+                if self.watcher_window.analog_input_type == "TEXT":
+                    data = self.watcher_window.datas["input_text"]["x"]
+                    parity_bit = dsp.parity_check_auto(data, check_type="odd")
+                    self.add_log(f"Parity Check-Odd: {parity_bit}")
+                elif self.watcher_window.analog_input_type == "VOICE":
+                    data = self.watcher_window.datas["voice"]["y"]
+                    parity_bit = dsp.parity_check_auto(data, check_type="odd")
+                    self.add_log(f"Parity Check-Odd: {parity_bit}")
+                ensure_data_key(self.watcher_window.datas, "parity_odd")
+                self.watcher_window.datas["parity_odd"]["x"] = parity_bit
+                self.watcher_window.ui.watcherSelect.addItem("Parity Check-Odd")
+
+                
+
     def add_log(self, log_message, log_level="INFO"):
             """
             添加日志信息，带有不同颜色的日志级别
@@ -124,7 +184,7 @@ class MainWindow(QMainWindow):
         <h1>很好,现在你选择了两个卫星!</h1>
         <p>现在可以选择输入信号.输入一段音乐或者一段文本都可以</p>
         <h1>点一下Set Input吧!</h1>
-        <p><img src="properties/pics/bug-fix.jpg" width="150"/></p>
+        <p><img src="properties/pics/bug-fix.jpg" width="125"/></p>
         <p>你的Select Satellites按钮我先没收了</p>
         """
         self.ui.statusBox.setHtml(self.status_html_content)
@@ -176,7 +236,7 @@ class MainWindow(QMainWindow):
 
                     print(self.watcher_window.datas)
                     receive = True
-                    self.add_log("Reding mp3 file...")
+                    self.add_log("Reading mp3 file...")
                 except Exception as e:
                     self.add_log("Failed to read mp3 file. Try Again?", "WARN")
                     print("音频文件读取失败:", e)
@@ -185,13 +245,23 @@ class MainWindow(QMainWindow):
             if receive:
                 self.ui.input_btn.setEnabled(False)
                 self.status_html_content = """
-                <h1>收到了你的输入数据!</h1>
-                <h1>点一下Watcher Window可以看到数据哦</h1>
+                <h3>收到了你的输入数据!</h3>
+                <h3>完成了AD转换</h3>
+                <h3>点一下Watcher可以看到数据</h3>
+                <p><img src=properties/pics/smile.jpg width=125></p>
+                <h3>在Encoder处选择编码方式</h3>
+                <p>随后点击Continue</p>
                 """
-                # 记录模拟输入类型
-                self.watcher_window.analog_type = data_type
                 self.ui.statusBox.setHtml(self.status_html_content)
 
+                # 更新状态机
+                self.status = "ENCODE"
+                self.add_log(f"ANALOG INPUT TYPE: {data_type}")
+                self.add_log("AD conversion finished.")
+                
+                # 记录模拟输入类型
+                self.watcher_window.analog_input_type = data_type
+                self.ui.continue_btn.setEnabled(True)
 
 def main():
     fmt = QSurfaceFormat()

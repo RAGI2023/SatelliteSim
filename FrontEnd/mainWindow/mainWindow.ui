@@ -47,7 +47,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>newWindow</string>
+     <string>Watcher</string>
     </property>
    </widget>
    <widget class="QPushButton" name="input_btn">
@@ -94,6 +94,44 @@
     </property>
     <property name="text">
      <string>Continue</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="encoderComboBox">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>10</y>
+      <width>86</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>CRC</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Parity Check-Odd</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Parity Check-Even</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="encoderLabel">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>10</y>
+      <width>67</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Encoder</string>
     </property>
    </widget>
   </widget>
