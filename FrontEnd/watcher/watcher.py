@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/watcher.ui'
+# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/watcher/watcher.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -15,18 +15,9 @@ class Ui_Watcher(object):
     def setupUi(self, Watcher):
         Watcher.setObjectName("Watcher")
         Watcher.resize(904, 511)
-        self.subplt1 = QtWidgets.QWidget(Watcher)
-        self.subplt1.setGeometry(QtCore.QRect(30, 50, 400, 250))
-        self.subplt1.setObjectName("subplt1")
-        self.text1 = QtWidgets.QTextEdit(self.subplt1)
-        self.text1.setGeometry(QtCore.QRect(0, 0, 401, 251))
-        self.text1.setObjectName("text1")
         self.subtitle1 = QtWidgets.QLabel(Watcher)
         self.subtitle1.setGeometry(QtCore.QRect(190, 310, 67, 17))
         self.subtitle1.setObjectName("subtitle1")
-        self.subplt2 = QtWidgets.QWidget(Watcher)
-        self.subplt2.setGeometry(QtCore.QRect(450, 50, 400, 250))
-        self.subplt2.setObjectName("subplt2")
         self.subtitle2 = QtWidgets.QLabel(Watcher)
         self.subtitle2.setGeometry(QtCore.QRect(590, 310, 67, 17))
         self.subtitle2.setObjectName("subtitle2")
@@ -44,8 +35,43 @@ class Ui_Watcher(object):
         self.CloseButton = QtWidgets.QPushButton(Watcher)
         self.CloseButton.setGeometry(QtCore.QRect(380, 420, 89, 25))
         self.CloseButton.setObjectName("CloseButton")
+        self.watcherSelect = QtWidgets.QComboBox(Watcher)
+        self.watcherSelect.setGeometry(QtCore.QRect(110, 10, 86, 25))
+        self.watcherSelect.setObjectName("watcherSelect")
+        self.watcherSelect.addItem("")
+        self.stackedWidget = QtWidgets.QStackedWidget(Watcher)
+        self.stackedWidget.setGeometry(QtCore.QRect(40, 50, 391, 241))
+        self.stackedWidget.setObjectName("stackedWidget")
+        self.plt_page = QtWidgets.QWidget()
+        self.plt_page.setObjectName("plt_page")
+        self.subplt1 = QtWidgets.QWidget(self.plt_page)
+        self.subplt1.setGeometry(QtCore.QRect(-10, -10, 400, 250))
+        self.subplt1.setObjectName("subplt1")
+        self.stackedWidget.addWidget(self.plt_page)
+        self.text_page = QtWidgets.QWidget()
+        self.text_page.setObjectName("text_page")
+        self.text1 = QtWidgets.QTextEdit(self.text_page)
+        self.text1.setGeometry(QtCore.QRect(0, 0, 391, 241))
+        self.text1.setObjectName("text1")
+        self.stackedWidget.addWidget(self.text_page)
+        self.stackedWidget_2 = QtWidgets.QStackedWidget(Watcher)
+        self.stackedWidget_2.setGeometry(QtCore.QRect(480, 50, 351, 241))
+        self.stackedWidget_2.setObjectName("stackedWidget_2")
+        self.page = QtWidgets.QWidget()
+        self.page.setObjectName("page")
+        self.subplt2 = QtWidgets.QWidget(self.page)
+        self.subplt2.setGeometry(QtCore.QRect(0, 0, 341, 231))
+        self.subplt2.setObjectName("subplt2")
+        self.stackedWidget_2.addWidget(self.page)
+        self.page_2 = QtWidgets.QWidget()
+        self.page_2.setObjectName("page_2")
+        self.text2 = QtWidgets.QTextEdit(self.page_2)
+        self.text2.setGeometry(QtCore.QRect(10, 10, 341, 231))
+        self.text2.setObjectName("text2")
+        self.stackedWidget_2.addWidget(self.page_2)
 
         self.retranslateUi(Watcher)
+        self.stackedWidget.setCurrentIndex(1)
         self.CloseButton.pressed.connect(Watcher.close) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Watcher)
 
@@ -56,3 +82,4 @@ class Ui_Watcher(object):
         self.subtitle2.setText(_translate("Watcher", "TextLabel"))
         self.SyncCheckBox.setText(_translate("Watcher", "Sync"))
         self.CloseButton.setText(_translate("Watcher", "Close"))
+        self.watcherSelect.setItemText(0, _translate("Watcher", "AD"))

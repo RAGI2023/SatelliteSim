@@ -3,10 +3,11 @@ from PyQt5.QtWidgets import QVBoxLayout
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from FrontEnd.watcher.watcher import Ui_Watcher
+import binascii
 
 def ensure_data_key(datas, key):
     if key not in datas:
-        datas[key] = {"x": [], "y": []}
+        datas[key] = {"x": [], "y": [], "DSPF": 0}
 
 class WatcherWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -15,14 +16,15 @@ class WatcherWindow(QtWidgets.QWidget):
         self.ui.setupUi(self)
         self.ui.subSlider1.valueChanged.connect(self.slider1_changed)
         self.ui.subSlider2.valueChanged.connect(self.slider2_changed)
+
+        # 模拟输入类型 “TEXT” “VOICE”
+        self.analog_type = ""
+        self.currentComboBox = "AD"
+        self.ui.watcherSelect.currentTextChanged.connect(self.watcherSelectChanged)
+
         # 空字典
         self.datas = {}
 
-        # 当前在显示什么数据？
-        self.currentShowData = ""
-            
-        self.DataSize_in_view = []
-        
         # 子图1
         # 初始化时设置布局（只做一次）
         self.canvas1 = FigureCanvas(Figure(figsize=(4, 3)))
@@ -37,7 +39,11 @@ class WatcherWindow(QtWidgets.QWidget):
         self.ui.subplt2.setLayout(QVBoxLayout())
         self.ui.subplt2.layout().addWidget(self.canvas2)
 
-
+    def watcherSelectChanged(self, value):
+        """
+        根据选择更新显示内容
+        """
+        self.currentComboBox = value
 
     def showPlt1(self, show, show_slide = True):
         if show:
@@ -45,10 +51,13 @@ class WatcherWindow(QtWidgets.QWidget):
             self.ui.subtitle1.show()
             if show_slide:
                 self.ui.subSlider1.show()
+            self.ui.stackedWidget.setCurrentIndex(0)  # 显示 subplt1 页
+            
         else:
             self.ui.subplt1.hide()
             self.ui.subtitle1.hide()
             self.ui.subSlider1.hide()
+            self.ui.stackedWidget.setCurrentIndex(1)  # 显示 text1 页
 
     def showPlt2(self, show, show_slide = True):
         if show:
@@ -56,16 +65,13 @@ class WatcherWindow(QtWidgets.QWidget):
             self.ui.subtitle2.show()
             if show_slide:
                 self.ui.subSlider2.show()
+            self.ui.stackedWidget_2.setCurrentIndex(0)  # 显示 subplt1 页
+            
         else:
             self.ui.subplt2.hide()
             self.ui.subtitle2.hide()
             self.ui.subSlider2.hide()
-    
-    def showText1(self, show):
-        if show:
-            self.ui.text1.show()
-        else:
-            self.ui.text1.hide()
+            self.ui.stackedWidget_2.setCurrentIndex(1)  # 显示 subplt1 页
 
     def slider1_changed(self, value):
         print("Slider 1 changed:", value)
@@ -73,11 +79,10 @@ class WatcherWindow(QtWidgets.QWidget):
             self.ui.subSlider2.setValue(value)
         # 更新图表
 
-        total_data_len = len(self.datas["voice"]["x"])
-        show_data_index = (total_data_len - self.DataSize_in_view) * (value / 100.0)
+        show_data_index = (len(self.datas[self.displayTAG[0]]["x"]) - self.datas[self.displayTAG[0]]["DSPF"]) * (value / 100.0)
         try:
-            x = self.datas["voice"]["x"][int(show_data_index):int(show_data_index + self.DataSize_in_view)]
-            y = self.datas["voice"]["y"][int(show_data_index):int(show_data_index + self.DataSize_in_view)]
+            x = self.datas[self.displayTAG[0]]["x"][int(show_data_index):int(show_data_index + self.datas[self.displayTAG[0]]["DSPF"])]
+            y = self.datas[self.displayTAG[0]]["y"][int(show_data_index):int(show_data_index + self.datas[self.displayTAG[0]]["DSPF"])]
             self.widgetPlot1(x, y)
         except:
             print("无法更新图表!")
@@ -86,6 +91,14 @@ class WatcherWindow(QtWidgets.QWidget):
         print("Slider 2 changed:", value)
         if self.ui.SyncCheckBox.isChecked():
             self.ui.subSlider1.setValue(value)
+
+        show_data_index = (len(self.datas[self.displayTAG[1]]["x"]) - self.datas[self.displayTAG[1]]["DSPF"]) * (value / 100.0)
+        try:
+            x = self.datas[self.displayTAG[1]]["x"][int(show_data_index):int(show_data_index + self.datas[self.displayTAG[1]]["DSPF"])]
+            y = self.datas[self.displayTAG[1]]["y"][int(show_data_index):int(show_data_index + self.datas[self.displayTAG[1]]["DSPF"])]
+            self.widgetPlot2(x, y)
+        except:
+            print("无法更新图表!")
 
     def widgetPlot1(self, x, y, title = "", xlabel = "x", ylabel = "y", grid = True):
         """
@@ -98,12 +111,12 @@ class WatcherWindow(QtWidgets.QWidget):
             ylabel (str, optional): 纵轴标签. Defaults to "y".
             grid (bool, optional): 是否显示网格. Defaults to True.
         """
-
         self.ax1.clear()  # 清除旧图
         self.ax1.plot(x, y)
         self.ax1.set_title(title)
         self.ax1.set_xlabel(xlabel)
         self.ax1.set_ylabel(ylabel)
+        self.ui.subtitle1.setText(title)
         if grid:
             self.ax1.grid()
         self.canvas1.draw()  # 重绘
@@ -119,12 +132,77 @@ class WatcherWindow(QtWidgets.QWidget):
             ylabel (str, optional): 纵轴标签. Defaults to "y".
             grid (bool, optional): 是否显示网格. Defaults to True.
         """
-
         self.ax2.clear()  # 清除旧图
         self.ax2.plot(x, y)
         self.ax2.set_title(title)
         self.ax2.set_xlabel(xlabel)
         self.ax2.set_ylabel(ylabel)
+        self.ui.subtitle2.setText(title)
         if grid:
             self.ax2.grid()
         self.canvas2.draw()  # 重绘
+
+
+    def show_watcher_window(self):
+        try:
+            self.show()
+            self.ui.watcherSelect.show()
+
+            # 当前 watcher 类型（如 "AD"）
+            watcher_type = self.currentComboBox
+            
+            # AD 类型查看
+            if watcher_type == "AD":
+                # 当前输入类型（如 "TEXT" 或 "VOICE"）
+                input_type = self.analog_type
+                
+                if input_type == "TEXT":
+                    # 切换到文本页面
+                    self.ui.stackedWidget.setCurrentIndex(1)  # text_page
+                    self.ui.stackedWidget_2.setCurrentIndex(1)  # text_page
+                    self.showPlt1(False)
+                    self.showPlt2(False)
+
+                    text_data = self.datas.get("input_text", {}).get("x", "")
+                    self.ui.text1.setText(str(text_data))
+                    
+                    hex_raw = binascii.hexlify(text_data.encode('utf-8')).decode('utf-8').upper()
+                    hex_str = ' '.join(hex_raw[i:i+2] for i in range(0, len(hex_raw), 2))
+                    self.ui.text2.setText(hex_str)
+                    self.ui.text2.show()
+                    self.ui.text1.show()
+
+                # VOICE 类型输入
+                elif input_type == "VOICE":
+                    # 切换到图表页面
+                    self.ui.stackedWidget.setCurrentIndex(0)  # plt_page
+                    self.ui.stackedWidget_2.setCurrentIndex(0)  # text_page
+
+                    self.ui.text1.hide()
+                    self.showPlt1(True, True)
+                    self.showPlt2(True, True)
+
+                    self.displayTAG = ["voice_analog", "voice"]
+
+                    voice_data_ana = self.datas.get(self.displayTAG[0], {})
+                    x_data1 = voice_data_ana.get("x", [])
+                    y_data1 = voice_data_ana.get("y", [])
+                    self.total_data_len1 = len(x_data1)
+                    data_size1 = self.datas[self.displayTAG[0]]["DSPF"]
+
+                    voice_data_dis = self.datas.get(self.displayTAG[1], {})
+                    x_data2 = voice_data_dis.get("x", [])
+                    y_data2 = voice_data_dis.get("y", [])
+                    self.total_data_len2 = len(x_data2)
+                    data_size2 = self.datas[self.displayTAG[1]]["DSPF"]
+
+                    
+                    self.widgetPlot2(x_data2[0:data_size2], y_data2[0:data_size2], "DIGITAL")
+
+                    self.widgetPlot1(x_data1[0:data_size1], y_data1[0:data_size1],"ANALOG")
+
+                else:
+                    raise ValueError("Invalid input type selected.")
+
+        except Exception as e:
+            print("错误：", e)

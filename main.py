@@ -4,17 +4,12 @@ from PyQt5.QtGui import QSurfaceFormat
 from FrontEnd.mainWindow.mainWindow import Ui_MainWindow
 from FrontEnd.mainWindow.openGLwidget import OpenGLWindow
 from FrontEnd.query.queryClass import QueryWindow
-from FrontEnd.watcher.watcherClass import WatcherWindow
+from FrontEnd.watcher.watcherClass import WatcherWindow, ensure_data_key
 import BackEnd.plan_satellite_path as plan_satellite_path
 import BackEnd.bpsk as bpsk
 import BackEnd.ADtrans as ADtrans
 import numpy as np
 import time
-
-def ensure_data_key(datas, key):
-    if key not in datas:
-        datas[key] = {"x": [], "y": []}
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -31,6 +26,7 @@ class MainWindow(QMainWindow):
             "properties/models/satellite/10477_Satellite_v1_Diffuse.jpg",
             parent=self.ui.widget
         )
+        self.watcher_window = WatcherWindow()
 
         layout = QVBoxLayout(self.ui.widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -43,11 +39,10 @@ class MainWindow(QMainWindow):
 
         self.ui.SelectSatellites.clicked.connect(self.SelectSatellitesClicked)
         # 显示watcher
-        self.ui.newwindow_bt.clicked.connect(self.show_watcher_window)
+        self.ui.newwindow_bt.clicked.connect(self.watcher_window.show_watcher_window)
         # 显示输入窗口
         self.ui.input_btn.clicked.connect(self.show_input_window)
 
-        self.watcher_window = WatcherWindow()
 
         # 状态机
         """
@@ -58,7 +53,7 @@ class MainWindow(QMainWindow):
         self.status = "SELECT-SAT"
 
         # 开屏信息
-        cat_img_path = "properties/cat.png"
+        cat_img_path = "properties/pics/cat.png"
         self.status_html_content = f"""
         <h3>欢迎来到神奇妙妙卫星仿真</h3>
         <p>这个UI设计简直是一坨屎</p>
@@ -125,60 +120,78 @@ class MainWindow(QMainWindow):
         log = "Best Path:" + ", ".join(map(str, self.opengl_widget.orbitQueue))
         self.add_log(log)
 
+        self.status_html_content = f"""
+        <h1>很好,现在你选择了两个卫星!</h1>
+        <p>现在可以选择输入信号.输入一段音乐或者一段文本都可以</p>
+        <h1>点一下Set Input吧!</h1>
+        <p><img src="properties/pics/bug-fix.jpg" width="150"/></p>
+        <p>你的Select Satellites按钮我先没收了</p>
+        """
+        self.ui.statusBox.setHtml(self.status_html_content)
+        self.status = "INPUT"
+        self.ui.SelectSatellites.setEnabled(False)
+
     def show_input_window(self):
+        if self.status != "INPUT":
+            self.add_log("OOPS! Select sats first", "WARN")
+            return
         self.input_window = QueryWindow()
+        
         self.input_window.show()
         receive = False
         result = self.input_window.exec_()
 
         if result == QDialog.Accepted:
-            self.input_data = self.input_window.input_data
+            input_data = self.input_window.input_data
             data_type = self.input_window.inputType
+
+            
             if data_type == "TEXT":
-                print("主窗口获取的文本：", self.input_data)
-                if (self.input_data != ""):
+                ensure_data_key(self.watcher_window.datas, "input_text")
+                self.watcher_window.datas["input_text"]["x"] = input_data
+                print(self.watcher_window.datas["input_text"]["x"])
+                self.watcher_window.datas["input_text"]["y"] = []
+                print("主窗口获取的文本：", input_data)
+                if (input_data != ""):
                     receive = True
+                    self.add_log("Receive text content!")
 
             elif data_type == "VOICE":
-                print("主窗口获取的音频路径：", self.input_data)
+                print("主窗口获取的音频路径：", input_data)
                 try:
-                    ddata_8k, rate_8k = ADtrans.extract_audio_segment(self.input_data, 1000*70, 1000)
-                    ensure_data_key(self.watcher_window.datas, "voice")
-                    self.watcher_window.datas["voice"]["x"] = np.linspace(0, len(ddata_8k) / rate_8k, num=len(ddata_8k))
-                    self.watcher_window.datas["voice"]["y"] = ddata_8k
-                    self.watcher_window.DataSize_in_view = int(len(ddata_8k) / 30)
+                    ddata_digi, rate_digi = ADtrans.extract_audio_segment(input_data, 1000*70, 1000)
+                    ddata_ana, rate_ana = ADtrans.extract_audio_segment(input_data, 1000*70, 1000, 16000)
+                    
+                    # 16kHz 音乐，作为模拟量
+                    ensure_data_key(self.watcher_window.datas, "voice_analog")
+                    self.watcher_window.datas["voice_analog"]["x"] = np.linspace(0, len(ddata_ana) / rate_ana, num=len(ddata_ana))
+                    self.watcher_window.datas["voice_analog"]["y"] = ddata_ana
+                    self.watcher_window.datas["voice_analog"]["DSPF"] = int(len(ddata_ana) / 30)
 
+                    # 8kHz 音乐，作为数字量
+                    ensure_data_key(self.watcher_window.datas, "voice")
+                    self.watcher_window.datas["voice"]["x"] = np.linspace(0, len(ddata_digi) / rate_digi, num=len(ddata_digi))
+                    self.watcher_window.datas["voice"]["y"] = ddata_digi
+                    self.watcher_window.datas["voice"]["DSPF"] = int(len(ddata_digi) / 30)
+
+                    print(self.watcher_window.datas)
                     receive = True
+                    self.add_log("Reding mp3 file...")
                 except Exception as e:
+                    self.add_log("Failed to read mp3 file. Try Again?", "WARN")
                     print("音频文件读取失败:", e)
+                    print("try: apt install ffmpeg")
                     receive = False
             if receive:
+                self.ui.input_btn.setEnabled(False)
+                self.status_html_content = """
+                <h1>收到了你的输入数据!</h1>
+                <h1>点一下Watcher Window可以看到数据哦</h1>
+                """
+                # 记录模拟输入类型
+                self.watcher_window.analog_type = data_type
+                self.ui.statusBox.setHtml(self.status_html_content)
 
-                self.ui.input_btn.hide()
-
-
-    def show_watcher_window(self):
-        # self.watcher_window = WatcherWindow()
-
-        # TODO:添加选择数据的逻辑
-        bits = [0, 1, 1, 0, 1]  # 示例比特流
-        result = bpsk.bpsk_modulate(bits, carrier_freq=1000, sample_rate=10000)
-
-        # xy数据存储
-        ensure_data_key(self.watcher_window.datas, "bpsk")
-        self.watcher_window.datas["bpsk"]["x"] = result[:, 0]
-        self.watcher_window.datas["bpsk"]["y"] = result[:, 1]
-        self.watcher_window.DataSize_in_view = int(len(result[:, 0]) / 30)
-        self.watcher_window.show()
-
-        # 隐藏Text1
-        self.watcher_window.showText1(False)
-        
-        # subplot1显示数据
-        self.watcher_window.widgetPlot1(
-            self.watcher_window.datas["voice"]["x"][0:self.watcher_window.DataSize_in_view],
-            self.watcher_window.datas["voice"]["y"][0:self.watcher_window.DataSize_in_view],
-        )
 
 def main():
     fmt = QSurfaceFormat()

@@ -13,26 +13,6 @@
   <property name="windowTitle">
    <string>Watcher</string>
   </property>
-  <widget class="QWidget" name="subplt1" native="true">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>50</y>
-     <width>400</width>
-     <height>250</height>
-    </rect>
-   </property>
-   <widget class="QTextEdit" name="text1">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>401</width>
-      <height>251</height>
-     </rect>
-    </property>
-   </widget>
-  </widget>
   <widget class="QLabel" name="subtitle1">
    <property name="geometry">
     <rect>
@@ -44,16 +24,6 @@
    </property>
    <property name="text">
     <string>TextLabel</string>
-   </property>
-  </widget>
-  <widget class="QWidget" name="subplt2" native="true">
-   <property name="geometry">
-    <rect>
-     <x>450</x>
-     <y>50</y>
-     <width>400</width>
-     <height>250</height>
-    </rect>
    </property>
   </widget>
   <widget class="QLabel" name="subtitle2">
@@ -120,6 +90,92 @@
    <property name="text">
     <string>Close</string>
    </property>
+  </widget>
+  <widget class="QComboBox" name="watcherSelect">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>10</y>
+     <width>86</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>AD</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QStackedWidget" name="stackedWidget">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>50</y>
+     <width>391</width>
+     <height>241</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>1</number>
+   </property>
+   <widget class="QWidget" name="plt_page">
+    <widget class="QWidget" name="subplt1" native="true">
+     <property name="geometry">
+      <rect>
+       <x>-10</x>
+       <y>-10</y>
+       <width>400</width>
+       <height>250</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="text_page">
+    <widget class="QTextEdit" name="text1">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>391</width>
+       <height>241</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QStackedWidget" name="stackedWidget_2">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>50</y>
+     <width>351</width>
+     <height>241</height>
+    </rect>
+   </property>
+   <widget class="QWidget" name="page">
+    <widget class="QWidget" name="subplt2" native="true">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>341</width>
+       <height>231</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="page_2">
+    <widget class="QTextEdit" name="text2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>341</width>
+       <height>231</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
   </widget>
  </widget>
  <resources/>
