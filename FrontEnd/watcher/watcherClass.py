@@ -4,6 +4,10 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from FrontEnd.watcher.watcher import Ui_Watcher
 
+def ensure_data_key(datas, key):
+    if key not in datas:
+        datas[key] = {"x": [], "y": []}
+
 class WatcherWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
@@ -11,8 +15,12 @@ class WatcherWindow(QtWidgets.QWidget):
         self.ui.setupUi(self)
         self.ui.subSlider1.valueChanged.connect(self.slider1_changed)
         self.ui.subSlider2.valueChanged.connect(self.slider2_changed)
-        self.datas = [{"x": [], "y": []}]
-        
+        # 空字典
+        self.datas = {}
+
+        # 当前在显示什么数据？
+        self.currentShowData = ""
+            
         self.DataSize_in_view = []
         
         # 子图1
@@ -64,11 +72,12 @@ class WatcherWindow(QtWidgets.QWidget):
         if self.ui.SyncCheckBox.isChecked():
             self.ui.subSlider2.setValue(value)
         # 更新图表
-        total_data_len = len(self.datas[0]["x"])
+
+        total_data_len = len(self.datas["voice"]["x"])
         show_data_index = (total_data_len - self.DataSize_in_view) * (value / 100.0)
         try:
-            x = self.datas[0]["x"][int(show_data_index):int(show_data_index + self.DataSize_in_view)]
-            y = self.datas[0]["y"][int(show_data_index):int(show_data_index + self.DataSize_in_view)]
+            x = self.datas["voice"]["x"][int(show_data_index):int(show_data_index + self.DataSize_in_view)]
+            y = self.datas["voice"]["y"][int(show_data_index):int(show_data_index + self.DataSize_in_view)]
             self.widgetPlot1(x, y)
         except:
             print("无法更新图表!")

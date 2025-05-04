@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/query/queryText.ui'
+# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/query/query.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -32,6 +32,15 @@ class Ui_Dialog(object):
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
         self.comboBox.addItem("")
+        self.selectButton = QtWidgets.QPushButton(Dialog)
+        self.selectButton.setGeometry(QtCore.QRect(328, 130, 31, 20))
+        self.selectButton.setObjectName("selectButton")
+        self.pathlabel = QtWidgets.QLabel(Dialog)
+        self.pathlabel.setGeometry(QtCore.QRect(66, 130, 241, 21))
+        self.pathlabel.setObjectName("pathlabel")
+        self.Path = QtWidgets.QLabel(Dialog)
+        self.Path.setGeometry(QtCore.QRect(10, 130, 41, 21))
+        self.Path.setObjectName("Path")
 
         self.retranslateUi(Dialog)
         self.cancelButton.clicked.connect(Dialog.close) # type: ignore
@@ -45,3 +54,6 @@ class Ui_Dialog(object):
         self.submitButton.setText(_translate("Dialog", "Submit"))
         self.comboBox.setItemText(0, _translate("Dialog", "TEXT"))
         self.comboBox.setItemText(1, _translate("Dialog", "VOICE"))
+        self.selectButton.setText(_translate("Dialog", "..."))
+        self.pathlabel.setText(_translate("Dialog", "TextLabel"))
+        self.Path.setText(_translate("Dialog", "Path:"))
