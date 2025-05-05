@@ -124,6 +124,14 @@ class MainWindow(QMainWindow):
                 ensure_data_key(self.watcher_window.datas, "parity_odd")
                 self.watcher_window.datas["parity_odd"]["x"] = parity_bit
                 self.watcher_window.ui.watcherSelect.addItem("Parity Check-Odd")
+            print("编码完成")
+            self.add_log("Encoding finished.")
+            html_content = """
+            <h1>编码完成!</h1>
+            <p>请点击Continue按钮进行协议封装</p>
+            <p>请点击Watcher按钮查看数据</p>
+            """
+            self.ui.statusBox.setHtml(html_content)
 
                 
 
