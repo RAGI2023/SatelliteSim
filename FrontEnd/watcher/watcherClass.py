@@ -3,7 +3,8 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from FrontEnd.watcher.watcher import Ui_Watcher
 import binascii
-
+import struct
+import datetime
 def ensure_data_key(datas, key):
     if key not in datas:
         datas[key] = {"x": [], "y": [], "DSPF": 0}
@@ -21,6 +22,7 @@ class WatcherWindow(QWidget):
         self.currentComboBox = "AD"
         self.ui.watcherSelect.currentTextChanged.connect(self.watcherSelectChanged)
 
+        self.wrapper_method = ""
         # 空字典
         self.datas = {}
 
@@ -107,6 +109,55 @@ class WatcherWindow(QWidget):
                 self.ui.text1.hide()
                 self.ui.text2.show()
             self.ui.text2.setText(str(parity_data))
+        elif value == "wrapper":
+            if self.analog_input_type == "TEXT":
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+                self.ui.text1.setText(str(self.datas.get("input_text", {}).get("x", "")))
+            elif self.analog_input_type == "VOICE":
+                self.showPlt1(True)
+                self.showPlt2(False)
+                self.ui.text1.hide()
+                self.ui.text2.show()
+
+            def parse_protocol_header(header: bytes, checksum_method: str = "sha256") -> str:
+                """
+                将协议 header 解析为 HTML 格式字符串，支持彩色显示各字段
+                使用新版协议格式（timestamp 为 8 字节）
+                """
+
+                header_format = "!B16s16sQI32sBBI"
+                header_size = struct.calcsize(header_format)
+                if len(header) < header_size:
+                    return "<span style='color:red;'>Header 长度不足，无法解析。</span>"
+
+                unpacked = struct.unpack(header_format, header[:header_size])
+
+                version, source, dest, timestamp, data_len, checksum, priority, data_type, sequence = unpacked
+                source = source.rstrip(b'\x00').decode('utf-8')
+                dest = dest.rstrip(b'\x00').decode('utf-8')
+                checksum_hex = binascii.hexlify(checksum).decode('utf-8')
+                time_str = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+                html = f"""
+                <b>🌐 Protocol Header ({checksum_method.upper()}, {header_size} bytes):</b><br>
+                <span style="color:red;">Version:</span> {version}<br>
+                <span style="color:blue;">Source:</span> {source}<br>
+                <span style="color:green;">Destination:</span> {dest}<br>
+                <span style="color:orange;">Timestamp:</span> {timestamp} <i>({time_str})</i><br>
+                <span style="color:purple;">Data Length:</span> {data_len} bytes<br>
+                <span style="color:brown;">Checksum ({checksum_method}):</span><br>
+                <code style="color:#444;">{checksum_hex}</code><br>
+                <span style="color:teal;">Priority:</span> {priority}<br>
+                <span style="color:darkcyan;">Data Type:</span> {data_type}<br>
+                <span style="color:gray;">Sequence:</span> {sequence}
+                """
+                return html
+            
+            self.ui.text2.setHtml(parse_protocol_header(self.datas["packed_data"]["x"], self.wrapper_method))
+    
     def showPlt1(self, show, show_slide = True):
         if show:
             self.ui.subplt1.show()

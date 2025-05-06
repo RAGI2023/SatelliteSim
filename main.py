@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QDialog
-from PyQt5.QtGui import QSurfaceFormat
+from PyQt5.QtG.i import QSurfaceFormat
 from FrontEnd.mainWindow.mainWindow import Ui_MainWindow
 from FrontEnd.mainWindow.openGLwidget import OpenGLWindow
 from FrontEnd.query.queryClass import QueryWindow
@@ -9,8 +9,10 @@ import BackEnd.plan_satellite_path as plan_satellite_path
 import BackEnd.bpsk as bpsk
 import BackEnd.ADtrans as ADtrans
 import BackEnd.dsp as dsp
+import BackEnd.wrapper as wrapper
 import numpy as np
 import time
+import struct
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -47,12 +49,19 @@ class MainWindow(QMainWindow):
         # 显示输入窗口
         self.ui.input_btn.clicked.connect(self.show_input_window)
 
+        # 禁用Input按钮
+        self.ui.input_btn.setEnabled(False)
+        # 禁用Continue按钮
+        self.ui.continue_btn.setEnabled(False)
+
 
         # 状态机
         """
         - 等待卫星:"SELECT-SAT"
         - 等待信号输入:"INPUT"
         - 准备编码:"ENCODE"
+        - 准备协议封装:"WRAPPER"
+        - 准备调制:"MODULATION"
         - 无缺失:"NONE"
         """
         self.status = "SELECT-SAT"
@@ -81,6 +90,7 @@ class MainWindow(QMainWindow):
 
             print("开始编码")
             self.encodeMethod = self.ui.encoderComboBox.currentText()
+            self.ui.encoderComboBox.setEnabled(False)
             if self.encodeMethod == "CRC":
                 self.add_log("Using CRC encoding...")
                 print("使用CRC编码")
@@ -89,7 +99,7 @@ class MainWindow(QMainWindow):
                 if self.watcher_window.analog_input_type == "TEXT":
                     crc_out = dsp.crc32(self.watcher_window.datas["input_text"]["x"])
                 elif self.watcher_window.analog_input_type == "VOICE":
-                    crc_out = dsp.crc32(self.watcher_window.datas["voice"]["y"].tobytes())
+                    crc_out = dsp.crc32(self.watcher_window.datas["voice"]["y"])
                 self.add_log(f"CRC32: {crc_out}")
                 ensure_data_key(self.watcher_window.datas, "crc")
                 self.watcher_window.datas["crc"]["x"] = crc_out
@@ -132,7 +142,47 @@ class MainWindow(QMainWindow):
             <p>请点击Watcher按钮查看数据</p>
             """
             self.ui.statusBox.setHtml(html_content)
+            self.status = "WRAPPER"
+        elif status == "WRAPPER":
+            self.add_log("Begin wrapper")
+            self.watcher_window.wrapper_method = self.ui.wrapper_comboBox.currentText()
+            if self.watcher_window.analog_input_type == "TEXT":
+                # 1. 获取文本内容
+                text = self.watcher_window.datas["input_text"]["x"]  # 字符串
+                text_bytes = text.encode('utf-8')  # 转为 UTF-8 字节流
 
+                # 2. 获取 CRC 值（int）并打包为 4 字节
+                crc_int = self.watcher_window.datas["crc"]["x"]
+                crc_bytes = struct.pack(">I", crc_int)
+
+                # 3. 拼接文本数据和 CRC
+                data = text_bytes + crc_bytes
+            elif self.watcher_window.analog_input_type == "VOICE":
+                voice_list = self.watcher_window.datas["voice"]["y"]  # list of int
+                voice_bytes = np.array(voice_list, dtype=np.int16).tobytes()
+
+                # 2. 获取 CRC 值（如果是 int）
+                crc_int = self.watcher_window.datas["crc"]["x"]
+                crc_bytes = struct.pack(">I", crc_int)  # 4 字节，大端字节序
+
+                data = voice_bytes + crc_bytes
+
+            # 进行协议封装
+            ensure_data_key(self.watcher_window.datas, "packed_data")
+            packed_data = wrapper.pack_protocol(data, str(self.start_sat), str(self.end_sat))
+            self.watcher_window.datas["packed_data"]["x"] = packed_data
+
+            self.watcher_window.ui.watcherSelect.addItem("wrapper")
+            self.ui.wrapper_comboBox.setEnabled(False)
+            self.status = "MODULATION"
+            html_content = """
+            <h3>已经完成协议封装!</h3>
+            <h3>按continue可以继续调制!</h3>
+            """
+            self.ui.statusBox.setHtml(html_content)
+            self.add_log("Finished Wrapper")
+
+            
                 
 
     def add_log(self, log_message, log_level="INFO"):
@@ -169,9 +219,9 @@ class MainWindow(QMainWindow):
             print("Click more satellites...")
             self.add_log("Need to select more satelites.", "WARN")
             return
-        index1 = self.opengl_widget.clickQueue[-2]
-        index2 = self.opengl_widget.clickQueue[-1]
-        self.add_log(f"Successfully select 2 satellites: {index1}, {index2}")
+        self.start_sat = self.opengl_widget.clickQueue[-2]
+        self.end_sat = self.opengl_widget.clickQueue[-1]
+        self.add_log(f"Successfully select 2 satellites: {self.start_sat}, {self.end_sat}")
         sattelites_dics = []
         for sat in self.opengl_widget.satellites:
             sat_data = {
@@ -184,7 +234,7 @@ class MainWindow(QMainWindow):
             sattelites_dics.append(sat_data)
         
 
-        self.opengl_widget.orbitQueue = plan_satellite_path.plan_satellite_path(sattelites_dics, index1, index2)
+        self.opengl_widget.orbitQueue = plan_satellite_path.plan_satellite_path(sattelites_dics, self.start_sat, self.end_sat)
         log = "Best Path:" + ", ".join(map(str, self.opengl_widget.orbitQueue))
         self.add_log(log)
 
@@ -198,6 +248,7 @@ class MainWindow(QMainWindow):
         self.ui.statusBox.setHtml(self.status_html_content)
         self.status = "INPUT"
         self.ui.SelectSatellites.setEnabled(False)
+        self.ui.input_btn.setEnabled(True)
 
     def show_input_window(self):
         if self.status != "INPUT":
@@ -232,14 +283,14 @@ class MainWindow(QMainWindow):
                     
                     # 16kHz 音乐，作为模拟量
                     ensure_data_key(self.watcher_window.datas, "voice_analog")
-                    self.watcher_window.datas["voice_analog"]["x"] = np.linspace(0, len(ddata_ana) / rate_ana, num=len(ddata_ana))
-                    self.watcher_window.datas["voice_analog"]["y"] = ddata_ana
+                    self.watcher_window.datas["voice_analog"]["x"] = np.linspace(0, len(ddata_ana) / rate_ana, num=len(ddata_ana)).tolist()
+                    self.watcher_window.datas["voice_analog"]["y"] = ddata_ana.tolist()
                     self.watcher_window.datas["voice_analog"]["DSPF"] = int(len(ddata_ana) / 30)
 
                     # 8kHz 音乐，作为数字量
                     ensure_data_key(self.watcher_window.datas, "voice")
-                    self.watcher_window.datas["voice"]["x"] = np.linspace(0, len(ddata_digi) / rate_digi, num=len(ddata_digi))
-                    self.watcher_window.datas["voice"]["y"] = ddata_digi
+                    self.watcher_window.datas["voice"]["x"] = np.linspace(0, len(ddata_digi) / rate_digi, num=len(ddata_digi)).tolist()
+                    self.watcher_window.datas["voice"]["y"] = ddata_digi.tolist()
                     self.watcher_window.datas["voice"]["DSPF"] = int(len(ddata_digi) / 30)
 
                     print(self.watcher_window.datas)
@@ -264,12 +315,14 @@ class MainWindow(QMainWindow):
 
                 # 更新状态机
                 self.status = "ENCODE"
+                self.ui.continue_btn.setEnabled(True)
+                self.ui.continue_btn.setEnabled(True)
+
                 self.add_log(f"ANALOG INPUT TYPE: {data_type}")
                 self.add_log("AD conversion finished.")
                 
                 # 记录模拟输入类型
                 self.watcher_window.analog_input_type = data_type
-                self.ui.continue_btn.setEnabled(True)
 
 def main():
     fmt = QSurfaceFormat()

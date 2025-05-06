@@ -9,6 +9,8 @@ def crc32(data):
         data = data.encode('utf-8')
     elif isinstance(data, np.ndarray):
         data = data.tobytes()
+    elif isinstance(data, list):
+        data = np.array(data).tobytes()
     elif not isinstance(data, bytes):
         raise TypeError(f"Unsupported data type: {type(data)}. Must be str, bytes, or numpy.ndarray.")
     
