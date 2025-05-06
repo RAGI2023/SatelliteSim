@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QDialog
-from PyQt5.QtG.i import QSurfaceFormat
+from PyQt5.QtGui import QSurfaceFormat
 from FrontEnd.mainWindow.mainWindow import Ui_MainWindow
 from FrontEnd.mainWindow.openGLwidget import OpenGLWindow
 from FrontEnd.query.queryClass import QueryWindow
