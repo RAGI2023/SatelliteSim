@@ -156,8 +156,19 @@ class WatcherWindow(QWidget):
                 """
                 return html
             
+         
             self.ui.text2.setHtml(parse_protocol_header(self.datas["packed_data"]["x"], self.wrapper_method))
-    
+        elif value == "bpsk_modulated":
+            mod_data = self.datas.get("bpsk_modulated", {}).get("x", [])
+           # 解包 x 和 y
+            x_data = mod_data[:, 0]
+            y_data = mod_data[:, 1]
+            self.showPlt1(True)
+            self.showPlt2(False)
+            self.ui.text1.hide()
+            self.ui.text2.hide()
+            self.widgetPlot1(x_data, y_data, "BPSK")
+
     def showPlt1(self, show, show_slide = True):
         if show:
             self.ui.subplt1.show()

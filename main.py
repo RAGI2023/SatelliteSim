@@ -189,14 +189,27 @@ class MainWindow(QMainWindow):
             # 进行调制
             self.modulation_method = self.ui.modulation_comboBox.currentText()
             self.ui.modulation_comboBox.setEnabled(False)
+            self.status_html_content = """
+                <h3>开始调制</h3>
+                <h3>可以通过watch查看调制结果</h3>
+                <h3>就这样了</h3>
+                """
+            self.ui.statusBox.setHtml(self.status_html_content)
             if self.modulation_method == "bpsk":
                 self.add_log("Using BPSK modulation...")
                 print("使用BPSK调制")
                 # 获取打包后的数据
                 packed_data = self.watcher_window.datas["packed_data"]["x"]
-                # 进行BPSK调制
-                modulated_data = bpsk.bpsk_modulate(packed_data, self.watcher_window.datas["voice"]["DSPF"])
-                
+                if self.watcher_window.analog_input_type == "TEXT":
+                    # 进行BPSK调制
+                    bpsk_modulated_data = bpsk.bpsk_modulate(packed_data)
+                    print("bpsk_modulated_data sample:", bpsk_modulated_data[:10])
+
+                    # 将调制后的数据存储到字典中
+                    ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
+                    self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
+                    self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
+                    self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated") 
 
 
     
