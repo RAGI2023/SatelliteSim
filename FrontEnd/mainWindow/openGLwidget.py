@@ -36,13 +36,15 @@ class Satellite:
 
     def update_position(self):
         self.angle = (self.angle + self.delta_deg) % 360
-        angle_rad = math.radians(self.angle)
+        angle_rad = math.radians(self.angle)# zyq 变为弧度制
+        # zyq 球体坐标转为直角坐标 莫的看懂思路阿
         self.x = self.r * math.cos(angle_rad)
         self.y = self.r * math.sin(angle_rad) * math.cos(self.inclination)
         self.z = self.r * math.sin(angle_rad) * math.sin(self.inclination)
 
 
 class OpenGLWindow(QOpenGLWidget):
+    # 地球，卫星模型和纹理路径
     def __init__(self, earth_texture, sat_model_path, sat_texture_path, parent=None):
         super().__init__(parent)
         self.earth_texture_file = earth_texture

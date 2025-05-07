@@ -186,7 +186,7 @@ if __name__ == "__main__":
         destination,
         # version=1,
         # priority=5,
-        data_type=2,
+        # data_type=2,
         # sequence=1001,
         # checksum_method="sha256"
     )
