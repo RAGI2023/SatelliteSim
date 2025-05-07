@@ -5,6 +5,7 @@ from FrontEnd.mainWindow.mainWindow import Ui_MainWindow
 from FrontEnd.mainWindow.openGLwidget import OpenGLWindow
 from FrontEnd.query.queryClass import QueryWindow
 from FrontEnd.watcher.watcherClass import WatcherWindow, ensure_data_key
+from FrontEnd.beam.beam_qt_ui import BeamControlUI
 import BackEnd.plan_satellite_path as plan_satellite_path
 import BackEnd.bpsk as bpsk
 import BackEnd.ADtrans as ADtrans
@@ -30,6 +31,7 @@ class MainWindow(QMainWindow):
             parent=self.ui.widget
         )
         self.watcher_window = WatcherWindow()
+        self.ground_control = BeamControlUI()
 
         layout = QVBoxLayout(self.ui.widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -48,7 +50,7 @@ class MainWindow(QMainWindow):
         self.ui.newwindow_bt.clicked.connect(self.watcher_window.show_watcher_window)
         # 显示输入窗口
         self.ui.input_btn.clicked.connect(self.show_input_window)
-
+        self.ui.GroundButton.clicked.connect(self.ground_control.show)
         # 禁用Input按钮
         self.ui.input_btn.setEnabled(False)
         # 禁用Continue按钮
