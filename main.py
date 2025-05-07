@@ -209,6 +209,7 @@ class MainWindow(QMainWindow):
                     ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
                     self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
                     self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
+                    self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 30) # Data Size Per Frame
                     self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated") 
 
 

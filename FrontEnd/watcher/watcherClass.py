@@ -167,7 +167,8 @@ class WatcherWindow(QWidget):
             self.showPlt2(False)
             self.ui.text1.hide()
             self.ui.text2.hide()
-            self.widgetPlot1(x_data, y_data, "BPSK")
+            size = self.datas["bpsk_modulated"]["DSPF"]
+            self.widgetPlot1(x_data[:size], y_data[:size], "BPSK")
 
     def showPlt1(self, show, show_slide = True):
         if show:
