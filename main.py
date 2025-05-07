@@ -181,6 +181,25 @@ class MainWindow(QMainWindow):
             """
             self.ui.statusBox.setHtml(html_content)
             self.add_log("Finished Wrapper")
+            self.status = "MODULATION"
+        elif status == "MODULATION":
+            self.add_log("Begin modulation")
+            # 进行调制
+            self.modulation_method = self.ui.modulation_comboBox.currentText()
+            self.ui.modulation_comboBox.setEnabled(False)
+            if self.modulation_method == "bpsk":
+                self.add_log("Using BPSK modulation...")
+                print("使用BPSK调制")
+                # 获取打包后的数据
+                packed_data = self.watcher_window.datas["packed_data"]["x"]
+                # 进行BPSK调制
+                modulated_data = bpsk.bpsk_modulate(packed_data, self.watcher_window.datas["voice"]["DSPF"])
+                
+
+
+    
+    
+
 
             
                 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/mainWindow/mainWindow.ui'
+# Form implementation generated from reading ui file '/home/poland/sate/SatelliteSim/FrontEnd/mainWindow/mainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -77,6 +77,19 @@ class Ui_MainWindow(object):
         self.wrapper_comboBox.addItem("")
         self.wrapper_comboBox.addItem("")
         self.horizontalLayout.addWidget(self.wrapper_comboBox)
+        self.modulation = QtWidgets.QLabel(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.modulation.sizePolicy().hasHeightForWidth())
+        self.modulation.setSizePolicy(sizePolicy)
+        self.modulation.setObjectName("modulation")
+        self.horizontalLayout.addWidget(self.modulation)
+        self.modulation_comboBox = QtWidgets.QComboBox(self.centralwidget)
+        self.modulation_comboBox.setObjectName("modulation_comboBox")
+        self.modulation_comboBox.addItem("")
+        self.modulation_comboBox.addItem("")
+        self.horizontalLayout.addWidget(self.modulation_comboBox)
         self.newwindow_bt = QtWidgets.QPushButton(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -148,6 +161,9 @@ class Ui_MainWindow(object):
         self.wrapper_label.setText(_translate("MainWindow", "wrapper"))
         self.wrapper_comboBox.setItemText(0, _translate("MainWindow", "sha256"))
         self.wrapper_comboBox.setItemText(1, _translate("MainWindow", "md5"))
+        self.modulation.setText(_translate("MainWindow", "modulation"))
+        self.modulation_comboBox.setItemText(0, _translate("MainWindow", "bpsk"))
+        self.modulation_comboBox.setItemText(1, _translate("MainWindow", "qpsk"))
         self.newwindow_bt.setText(_translate("MainWindow", "Watcher"))
         self.continue_btn.setText(_translate("MainWindow", "Continue"))
         self.menuEarth.setTitle(_translate("MainWindow", "Earth"))

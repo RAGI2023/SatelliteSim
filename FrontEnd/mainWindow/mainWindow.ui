@@ -115,6 +115,33 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="modulation">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>modulation</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="modulation_comboBox">
+        <item>
+         <property name="text">
+          <string>bpsk</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>qpsk</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="newwindow_bt">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
