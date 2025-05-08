@@ -1,13 +1,15 @@
 import numpy as np
+from signal_input import capture_image
 
 def qpsk_modulate(bit_seq, carrier_freq=1000, sample_rate=10000, symbol_duration=0.01):
-    # Ensure bit_seq has even length
+    # 确保比特序列长度为偶数
     if len(bit_seq) % 2 != 0:
         bit_seq = np.append(bit_seq, 0)
 
     t = np.arange(0, symbol_duration, 1/sample_rate)
     modulated_signal = []
 
+    # QPSK映射表
     mapping = {
         (0, 0): np.pi/4,
         (0, 1): 3*np.pi/4,
@@ -21,14 +23,12 @@ def qpsk_modulate(bit_seq, carrier_freq=1000, sample_rate=10000, symbol_duration
         signal = np.cos(2 * np.pi * carrier_freq * t + phase)
         modulated_signal.extend(signal)
 
-    x = np.linspace(0, len(modulated_signal) * 1 / sample_rate, len(modulated_signal))
-    y = modulated_signal
-    # 将列表转换为字符串形式再进行拼接
-    x_str = ','.join(map(str, x.tolist()))
-    y_str = ','.join(map(str, y))
-    data = x_str + '|' + y_str
+    # 优化数据拼接方式
+    x = np.linspace(0, len(modulated_signal) / sample_rate, len(modulated_signal))
+    y = np.array(modulated_signal)
+    data = f"{','.join(map(str, x))}|{','.join(map(str, y))}"
 
-    return np.array(data)
+    return data
 
 def qpsk_demodulate(data_str, carrier_freq=1000, sample_rate=10000, symbol_duration=0.01):
     # 解析字符串格式的数据
@@ -39,7 +39,6 @@ def qpsk_demodulate(data_str, carrier_freq=1000, sample_rate=10000, symbol_durat
     samples_per_symbol = len(t)
     num_symbols = len(y) // samples_per_symbol
 
-    # 构造本地载波
     bit_seq = []
 
     for i in range(num_symbols):
@@ -49,7 +48,7 @@ def qpsk_demodulate(data_str, carrier_freq=1000, sample_rate=10000, symbol_durat
 
         # 同步的正交载波
         cosine = np.cos(2 * np.pi * carrier_freq * t)
-        sine   = np.sin(2 * np.pi * carrier_freq * t)
+        sine = np.sin(2 * np.pi * carrier_freq * t)
 
         I = np.sum(segment * cosine)
         Q = np.sum(segment * sine)
@@ -68,12 +67,66 @@ def qpsk_demodulate(data_str, carrier_freq=1000, sample_rate=10000, symbol_durat
 
     return bit_seq
 
-
 if __name__ == "__main__":
-    bits = [0, 0, 1, 0, 1, 1, 0, 1]
-    modulated = qpsk_modulate(bits, carrier_freq=1000, sample_rate=10000)
-    print("QPSK调制结果（字符串部分）:", modulated[:100], "...")
+    frame = capture_image('test_image.jpg')  # 获取图片帧，形状为 (480, 640, 3)
+    import cv2
+    frame_resized = cv2.resize(frame, (32, 24))  # 将图片缩小到 32x24
+    height, width, channels = 32, 24, 3  # 根据压缩后的图片形状
 
-    demodulated = qpsk_demodulate(modulated, carrier_freq=1000, sample_rate=10000)
-    print("原始比特序列:", bits)
-    print("解调比特序列:", demodulated)
+    bit_seq = np.unpackbits(frame_resized.astype(np.uint8).flatten())  # 转换为比特序列
+    modulated = qpsk_modulate(bit_seq)  # 进行QPSK调制
+    print('调制成功')  # 打印调制结果
+    print(len(modulated))  # 打印调制后的数据
+
+    # 解调数据
+    demodulated_bits = qpsk_demodulate(modulated, carrier_freq=1000, sample_rate=10000)
+
+    # 将比特序列打包为字节
+    byte_data = np.packbits(demodulated_bits)
+
+    # 检查数据大小是否匹配目标形状
+    expected_size = height * width * channels
+    if len(byte_data) < expected_size:
+        # 如果数据不足，填充0
+        byte_data = np.pad(byte_data, (0, expected_size - len(byte_data)), mode='constant')
+    elif len(byte_data) > expected_size:
+        # 如果数据过多，截断多余部分
+        byte_data = byte_data[:expected_size]
+
+    # 将字节数据转换为图片
+    restored_image = np.frombuffer(byte_data, dtype=np.uint8).reshape((height, width, channels))
+
+    # 保存还原的图片
+    cv2.imwrite("restored_image.jpg", restored_image)
+    print("图片已还原并保存为 restored_image.jpg")
+    frame = capture_image('test_image.jpg')  # 获取图片帧，形状为 (480, 640, 3)
+    import cv2
+    frame_resized = cv2.resize(frame, (32, 24))  # 将图片缩小到 32x24
+    height, width, channels = 32, 24, 3  # 根据压缩后的图片形状
+
+    bit_seq = np.unpackbits(frame_resized.astype(np.uint8).flatten())  # 转换为比特序列
+    modulated = qpsk_modulate(bit_seq)  # 进行QPSK调制
+    print('调制成功')  # 打印调制结果
+    print(len(modulated))  # 打印调制后的数据
+
+    # 解调数据
+    demodulated_bits = qpsk_demodulate(modulated, carrier_freq=1000, sample_rate=10000)
+
+    # 将比特序列打包为字节
+    byte_data = np.packbits(demodulated_bits)
+
+    # 检查数据大小是否匹配目标形状
+    expected_size = height * width * channels
+    if len(byte_data) < expected_size:
+        # 如果数据不足，填充0
+        byte_data = np.pad(byte_data, (0, expected_size - len(byte_data)), mode='constant')
+    elif len(byte_data) > expected_size:
+        # 如果数据过多，截断多余部分
+        byte_data = byte_data[:expected_size]
+
+    # 将字节数据转换为图片
+    restored_image = np.frombuffer(byte_data, dtype=np.uint8).reshape((height, width, channels))
+
+    # 保存还原的图片
+    cv2.imwrite("restored_image.jpg", restored_image)
+    print("图片已还原并保存为 restored_image.jpg")
