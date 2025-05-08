@@ -5,6 +5,7 @@ from FrontEnd.watcher.watcher import Ui_Watcher
 import binascii
 import struct
 import datetime
+import numpy as np
 def ensure_data_key(datas, key):
     if key not in datas:
         datas[key] = {"x": [], "y": [], "DSPF": 0}
@@ -159,16 +160,64 @@ class WatcherWindow(QWidget):
          
             self.ui.text2.setHtml(parse_protocol_header(self.datas["packed_data"]["x"], self.wrapper_method))
         elif value == "bpsk_modulated":
-            mod_data = self.datas.get("bpsk_modulated", {}).get("x", [])
-           # 解包 x 和 y
-            x_data = mod_data[:, 0]
-            y_data = mod_data[:, 1]
-            self.showPlt1(True)
-            self.showPlt2(False)
-            self.ui.text1.hide()
-            self.ui.text2.hide()
-            size = self.datas["bpsk_modulated"]["DSPF"]
-            self.widgetPlot1(x_data[:size], y_data[:size], "BPSK")
+            if self.analog_input_type == "TEXT":
+              mod_data = self.datas.get("bpsk_modulated", {}).get("x", [])
+            # 解包 x 和 y
+              x_data = mod_data[:, 0]
+              y_data = mod_data[:, 1]
+              self.showPlt1(False)
+              self.showPlt2(True)
+              self.ui.text1.show()
+              self.ui.text2.hide()
+              self.ui.text1.setText(str(self.datas.get("input_text", {}).get("x", "")))
+              size = self.datas["bpsk_modulated"]["DSPF"]
+              self.widgetPlot2(x_data[:size], y_data[:size], "BPSK(dont touch the silder)")
+            if self.analog_input_type == "VOICE":
+              mod_data = self.datas.get("bpsk_modulated", {}).get("x", [])
+            # 解包 x 和 y
+              x_data = mod_data[:, 0]
+              y_data = mod_data[:, 1]
+              self.showPlt1(True)
+              self.showPlt2(True)
+              self.displayTAG = ["voice_analog", "bpsk_modulated"]
+              self.ui.text1.hide()
+              self.ui.text2.hide()
+              size = self.datas["bpsk_modulated"]["DSPF"]
+              self.widgetPlot2(x_data[:size], y_data[:size], "BPSK")
+        elif value == "qpsk_modulated":
+            if self.analog_input_type == "TEXT":
+        # 取出调制后的波形数据
+                mod_data = self.datas.get("qpsk_modulated", {}).get("x", [])       
+        # 隐藏波形图，显示文本区域
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+        # 显示原始输入文本
+                input_text = self.datas.get("input_text", {}).get("x", "")
+                self.ui.text1.setText(str(input_text))
+        # 显示调制后的数据（只显示前几项避免太长）
+                if isinstance(mod_data, (np.ndarray, list)):
+                     preview = np.array(mod_data[:50])  # 取前 50 个点预览
+                     preview_str = ', '.join([f"{x:.2f}" for x in preview])
+                     self.ui.text2.setText(f"QPSK 调制信号预览:\n[{preview_str}...]")
+                else:
+                     self.ui.text2.setText("调制信号数据格式错误。")
+            if self.analog_input_type == "VOICE":
+        # 取出调制后的波形数据
+                mod_data = self.datas.get("qpsk_modulated", {}).get("x", [])       
+        # 隐藏波形图，显示文本区域
+                self.showPlt1(True)
+                self.ui.text1.hide()
+                self.showPlt2(False)
+                self.ui.text2.show()
+        # 显示调制后的数据（只显示前几项避免太长）
+                if isinstance(mod_data, (np.ndarray, list)):
+                     preview = np.array(mod_data[:50])  # 取前 50 个点预览
+                     preview_str = ', '.join([f"{x:.2f}" for x in preview])
+                     self.ui.text2.setText(f"QPSK 调制信号预览:\n[{preview_str}...]")
+                else:
+                     self.ui.text2.setText("调制信号数据格式错误。")
 
     def showPlt1(self, show, show_slide = True):
         if show:

@@ -8,6 +8,7 @@ from FrontEnd.watcher.watcherClass import WatcherWindow, ensure_data_key
 from FrontEnd.beam.beam_qt_ui import BeamControlUI
 import BackEnd.plan_satellite_path as plan_satellite_path
 import BackEnd.bpsk as bpsk
+import BackEnd.qpsk as qpsk
 import BackEnd.ADtrans as ADtrans
 import BackEnd.dsp as dsp
 import BackEnd.wrapper as wrapper
@@ -202,15 +203,64 @@ class MainWindow(QMainWindow):
                 packed_data = self.watcher_window.datas["packed_data"]["x"]
                 if self.watcher_window.analog_input_type == "TEXT":
                     # 进行BPSK调制
-                    bpsk_modulated_data = bpsk.bpsk_modulate(packed_data)
-                    print("bpsk_modulated_data sample:", bpsk_modulated_data[:10])
+                     bpsk_modulated_data = bpsk.bpsk_modulate(packed_data)
+                     print("bpsk_modulated_data sample:", bpsk_modulated_data[:10])
 
-                    # 将调制后的数据存储到字典中
-                    ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
-                    self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
-                    self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
-                    self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 30) # Data Size Per Frame
-                    self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated") 
+                     # 将调制后的数据存储到字典中
+                     ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
+                     self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
+                     self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
+                     self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 30) # Data Size Per Frame
+                     self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated") 
+                if self.watcher_window.analog_input_type == "VOICE":
+                    # 进行BPSK调制
+                     bpsk_modulated_data = bpsk.bpsk_modulate(packed_data)
+                     print("bpsk_modulated_data sample:", bpsk_modulated_data[:10])
+
+                     # 将调制后的数据存储到字典中
+                     ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
+                     self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
+                     self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["voice"]["y"]
+                     self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 10000)
+                     self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated")
+            
+            elif self.modulation_method == "qpsk":
+             self.add_log("Using QPSK modulation...")
+             print("使用QPSK调制")
+
+             packed_data = self.watcher_window.datas["packed_data"]["x"]
+
+             if self.watcher_window.analog_input_type == "TEXT":
+                if isinstance(packed_data, (bytes, bytearray)):
+                     byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
+                     bit_array = np.unpackbits(byte_arr)
+                else:
+                     bit_array = np.array(packed_data, dtype=np.uint8)
+
+                qpsk_modulated_data = qpsk.qpsk_modulate(bit_array)
+
+                print("qpsk_modulated_data sample:", qpsk_modulated_data[:10])
+
+                ensure_data_key(self.watcher_window.datas, "qpsk_modulated")
+                self.watcher_window.datas["qpsk_modulated"]["x"] = qpsk_modulated_data
+                self.watcher_window.datas["qpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
+                self.watcher_window.ui.watcherSelect.addItem("qpsk_modulated")
+            if self.watcher_window.analog_input_type == "VOICE":
+                if isinstance(packed_data, (bytes, bytearray)):
+                     byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
+                     bit_array = np.unpackbits(byte_arr)
+                else:
+                     bit_array = np.array(packed_data, dtype=np.uint8)
+
+                qpsk_modulated_data = qpsk.qpsk_modulate(bit_array)
+
+                print("qpsk_modulated_data sample:", qpsk_modulated_data[:10])
+
+                ensure_data_key(self.watcher_window.datas, "qpsk_modulated")
+                self.watcher_window.datas["qpsk_modulated"]["x"] = qpsk_modulated_data
+                self.watcher_window.ui.watcherSelect.addItem("qpsk_modulated")
+
+
 
 
     

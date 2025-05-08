@@ -1,5 +1,5 @@
 import numpy as np
-from signal_input import capture_image
+from BackEnd.signal_input import capture_image
 
 def qpsk_modulate(bit_seq, carrier_freq=1000, sample_rate=10000, symbol_duration=0.01):
     # 确保比特序列长度为偶数
