@@ -161,13 +161,13 @@ def plot_audio_spectrum(audio, samplerate):
     plt.ylabel("Magnitude")
     plt.show()
 
-    if __name__ == "__main__":
+if __name__ == "__main__":
         # # 采集音频
-        audio_data = record_audio(filename="test_audio.wav", duration=3)
+    audio_data = record_audio(filename="test_audio.wav", duration=3)
         # 采集图片
-        image_data = capture_image(filename="test_image.jpg")
+    image_data = capture_image(filename="test_image.jpg")
         # 采集视频
-        video_file = record_video(filename="test_video.avi", duration=5)
+    video_file = record_video(filename="test_video.avi", duration=5)
 
 # def generate_sine_wave(frequency=440, duration=2, samplerate=16000, amplitude=0.5):
 #     """
