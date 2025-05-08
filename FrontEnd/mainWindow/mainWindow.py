@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/poland/sate/SatelliteSim/FrontEnd/mainWindow/mainWindow.ui'
+# Form implementation generated from reading ui file '/home/yin/SatelliteSim/FrontEnd/mainWindow/mainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -13,16 +13,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
-        # zyq 主窗口名称和大小
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1445, 895)
-
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
-
         self.centralwidget.setSizePolicy(sizePolicy)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
@@ -45,6 +42,14 @@ class Ui_MainWindow(object):
         self.input_btn.setSizePolicy(sizePolicy)
         self.input_btn.setObjectName("input_btn")
         self.horizontalLayout.addWidget(self.input_btn)
+        self.GroundButton = QtWidgets.QPushButton(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.GroundButton.sizePolicy().hasHeightForWidth())
+        self.GroundButton.setSizePolicy(sizePolicy)
+        self.GroundButton.setObjectName("GroundButton")
+        self.horizontalLayout.addWidget(self.GroundButton)
         self.encoderLabel = QtWidgets.QLabel(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -154,6 +159,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.SelectSatellites.setText(_translate("MainWindow", "Send Selected Satellites"))
         self.input_btn.setText(_translate("MainWindow", "Set Input"))
+        self.GroundButton.setText(_translate("MainWindow", "GroundSation"))
         self.encoderLabel.setText(_translate("MainWindow", "Encoder"))
         self.encoderComboBox.setItemText(0, _translate("MainWindow", "CRC"))
         self.encoderComboBox.setItemText(1, _translate("MainWindow", "Parity Check-Odd"))

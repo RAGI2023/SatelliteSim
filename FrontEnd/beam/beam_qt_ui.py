@@ -12,7 +12,7 @@ class BeamControlUI(QWidget):
         super().__init__()
         self.setWindowTitle("Beam 控制系统 (Qt版)")
         self.bcs = BeamControlSystem(
-            n_beams=5, beam_radius=5000, max_users_per_beam=5, freq_list=[800, 1800, 2600]
+            n_beams=5, beam_radius=500000, max_users_per_beam=5, freq_list=[800, 1800, 2600]
         )
         self.init_ui()
 
