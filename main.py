@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         - 准备协议封装:"WRAPPER"
         - 准备调制:"MODULATION"
         - 无缺失:"NONE"
+        - 解调制："DEMODULATION"
         """
         self.status = "SELECT-SAT"
 
@@ -199,66 +200,147 @@ class MainWindow(QMainWindow):
             if self.modulation_method == "bpsk":
                 self.add_log("Using BPSK modulation...")
                 print("使用BPSK调制")
-                # 获取打包后的数据
                 packed_data = self.watcher_window.datas["packed_data"]["x"]
+
                 if self.watcher_window.analog_input_type == "TEXT":
-                    # 进行BPSK调制
-                     bpsk_modulated_data = bpsk.bpsk_modulate(packed_data)
-                     print("bpsk_modulated_data sample:", bpsk_modulated_data[:10])
+        # 转换为 bit 数组
+                    if isinstance(packed_data, (bytes, bytearray)):
+                        byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
+                        bit_array = np.unpackbits(byte_arr)
+                    else:
+                        bit_array = np.array(packed_data, dtype=np.uint8)
 
-                     # 将调制后的数据存储到字典中
-                     ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
-                     self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
-                     self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
-                     self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 30) # Data Size Per Frame
-                     self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated") 
-                if self.watcher_window.analog_input_type == "VOICE":
-                    # 进行BPSK调制
-                     bpsk_modulated_data = bpsk.bpsk_modulate(packed_data)
-                     print("bpsk_modulated_data sample:", bpsk_modulated_data[:10])
+                    print("BPSK调制前的数据长度（比特数）:", len(bit_array))
+                    bpsk_modulated_data = bpsk.bpsk_modulate(bit_array)
+                    print("BPSK调制后的数据长度（采样点数）:", len(bpsk_modulated_data))
 
-                     # 将调制后的数据存储到字典中
-                     ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
-                     self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
-                     self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["voice"]["y"]
-                     self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 10000)
-                     self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated")
-            
+                    ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
+                    self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
+                    self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
+                    self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 1500)
+                    self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated")
+
+                elif self.watcher_window.analog_input_type == "VOICE":
+                    if isinstance(packed_data, (bytes, bytearray)):
+                        byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
+                        bit_array = np.unpackbits(byte_arr)
+                    else:
+                        bit_array = np.array(packed_data, dtype=np.uint8)
+
+                    print("BPSK调制前的数据长度（比特数）:", len(bit_array))
+                    bpsk_modulated_data = bpsk.bpsk_modulate(bit_array)
+                    print("BPSK调制后的数据长度（采样点数）:", len(bpsk_modulated_data))
+
+                    ensure_data_key(self.watcher_window.datas, "bpsk_modulated")
+                    self.watcher_window.datas["bpsk_modulated"]["x"] = bpsk_modulated_data
+                    self.watcher_window.datas["bpsk_modulated"]["y"] = self.watcher_window.datas["voice"]["y"]
+                    self.watcher_window.datas["bpsk_modulated"]["DSPF"] = int(len(bpsk_modulated_data) / 100000)
+                    self.watcher_window.ui.watcherSelect.addItem("bpsk_modulated")
+
             elif self.modulation_method == "qpsk":
-             self.add_log("Using QPSK modulation...")
-             print("使用QPSK调制")
+                self.add_log("Using QPSK modulation...")
+                print("使用QPSK调制")
+                packed_data = self.watcher_window.datas["packed_data"]["x"]
 
-             packed_data = self.watcher_window.datas["packed_data"]["x"]
+                if self.watcher_window.analog_input_type == "TEXT":
+        # 转换为 bit 数组
+                    if isinstance(packed_data, (bytes, bytearray)):
+                        byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
+                        bit_array = np.unpackbits(byte_arr)
+                    else:
+                        bit_array = np.array(packed_data, dtype=np.uint8)
 
-             if self.watcher_window.analog_input_type == "TEXT":
-                if isinstance(packed_data, (bytes, bytearray)):
-                     byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
-                     bit_array = np.unpackbits(byte_arr)
-                else:
-                     bit_array = np.array(packed_data, dtype=np.uint8)
+                    print("QPSK调制前的数据长度（比特数）:", len(bit_array))
+                    qpsk_modulated_data = qpsk.qpsk_modulate(bit_array)
+                    print("QPSK调制后的数据长度:", len(qpsk_modulated_data))
 
-                qpsk_modulated_data = qpsk.qpsk_modulate(bit_array)
+                    ensure_data_key(self.watcher_window.datas, "qpsk_modulated")
+                    self.watcher_window.datas["qpsk_modulated"]["x"] = qpsk_modulated_data
+                    self.watcher_window.datas["qpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
+                    self.watcher_window.ui.watcherSelect.addItem("qpsk_modulated")
 
-                print("qpsk_modulated_data sample:", qpsk_modulated_data[:10])
+                elif self.watcher_window.analog_input_type == "VOICE":
+                    if isinstance(packed_data, (bytes, bytearray)):
+                        byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
+                        bit_array = np.unpackbits(byte_arr)
+                    else:
+                        bit_array = np.array(packed_data, dtype=np.uint8)
 
-                ensure_data_key(self.watcher_window.datas, "qpsk_modulated")
-                self.watcher_window.datas["qpsk_modulated"]["x"] = qpsk_modulated_data
-                self.watcher_window.datas["qpsk_modulated"]["y"] = self.watcher_window.datas["input_text"]["x"]
-                self.watcher_window.ui.watcherSelect.addItem("qpsk_modulated")
-            if self.watcher_window.analog_input_type == "VOICE":
-                if isinstance(packed_data, (bytes, bytearray)):
-                     byte_arr = np.frombuffer(packed_data, dtype=np.uint8)
-                     bit_array = np.unpackbits(byte_arr)
-                else:
-                     bit_array = np.array(packed_data, dtype=np.uint8)
+                    print("QPSK调制前的数据长度（比特数）:", len(bit_array))
+                    qpsk_modulated_data = qpsk.qpsk_modulate(bit_array)
+                    print("QPSK调制后的数据长度:", len(qpsk_modulated_data))
 
-                qpsk_modulated_data = qpsk.qpsk_modulate(bit_array)
+                    ensure_data_key(self.watcher_window.datas, "qpsk_modulated")
+                    self.watcher_window.datas["qpsk_modulated"]["x"] = qpsk_modulated_data
+                    self.watcher_window.ui.watcherSelect.addItem("qpsk_modulated")
 
-                print("qpsk_modulated_data sample:", qpsk_modulated_data[:10])
+            self.add_log("Modulation finished.")
+            self.status = "DEMODULATION"
 
-                ensure_data_key(self.watcher_window.datas, "qpsk_modulated")
-                self.watcher_window.datas["qpsk_modulated"]["x"] = qpsk_modulated_data
-                self.watcher_window.ui.watcherSelect.addItem("qpsk_modulated")
+        elif status == "DEMODULATION":
+                 self.add_log("Begin remodulation")
+            # 进行解调制
+                 
+                
+                 self.status_html_content = """
+                <h3>开始解调制</h3>
+                <h3>可以通过watch查看解调制结果</h3>
+                <h3>让我们看看妙妙工具解调出来的结果吧</h3>
+                """
+                 self.ui.statusBox.setHtml(self.status_html_content)
+                 if self.modulation_method == "bpsk":
+                    self.add_log("BPSK demodulation...")
+                    print("解BPSK调制")
+    
+                    if self.watcher_window.analog_input_type == "TEXT":
+                    # 获取调制后的数据（二维：每行为 [t, value]）
+                        bpsk_modulated_data = self.watcher_window.datas["bpsk_modulated"]["x"]
+
+                     # ✅ 仅取第二列，即信号幅值部分
+                        if isinstance(bpsk_modulated_data, np.ndarray) and bpsk_modulated_data.ndim == 2:
+                              signal_only = bpsk_modulated_data[:, 1]
+                        else:
+                              signal_only = bpsk_modulated_data  # 如果已经是一维就直接用
+
+                         # 进行BPSK解调
+                        bpsk_demodulated_data = bpsk.bpsk_demodulate(signal_only)
+                        print("BPSK解调制后的数据长度:", len(bpsk_demodulated_data))
+
+                        # 将解调后的数据存储到字典中
+                        ensure_data_key(self.watcher_window.datas, "bpsk_demodulated")
+                        self.watcher_window.datas["bpsk_demodulated"]["x"] = bpsk_demodulated_data
+                        self.watcher_window.ui.watcherSelect.addItem("bpsk_demodulated")
+                    if self.watcher_window.analog_input_type == "VOICE":  
+                        bpsk_modulated_data = self.watcher_window.datas["bpsk_modulated"]["x"]
+
+                        # ✅ 取调制数据的幅值部分
+                        if isinstance(bpsk_modulated_data, np.ndarray) and bpsk_modulated_data.ndim == 2:
+                            signal_only = bpsk_modulated_data[:, 1]
+                        else:
+                            signal_only = bpsk_modulated_data
+
+                        # 进行BPSK解调
+                        bpsk_demodulated_data = bpsk.bpsk_demodulate(signal_only)
+                        print("BPSK语音解调后比特长度:", len(bpsk_demodulated_data))
+
+                        # 存储解调数据
+                        ensure_data_key(self.watcher_window.datas, "bpsk_demodulated")
+                        self.watcher_window.datas["bpsk_demodulated"]["x"] = bpsk_demodulated_data
+                        self.watcher_window.ui.watcherSelect.addItem("bpsk_demodulated")
+                 if self.modulation_method == "qpsk":
+                    self.add_log("QPSK demodulation...")
+                    print("解QPSK调制")
+                    if self.watcher_window.analog_input_type == "TEXT":
+                        qpsk_modulated_data = self.watcher_window.datas["qpsk_modulated"]["x"]
+
+                    
+
+
+
+                     
+
+                     
+                     
 
 
 
