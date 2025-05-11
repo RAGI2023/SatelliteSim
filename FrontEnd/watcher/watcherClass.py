@@ -318,6 +318,116 @@ class WatcherWindow(QWidget):
                     return html        
                  # 显示原始音频数据头部信息
                 self.ui.text2.setHtml(parse_protocol_header(demod_bytes, self.wrapper_method))
+        elif value == "qpsk_demodulated":
+            if self.analog_input_type == "TEXT":
+                demod_data = self.datas.get("qpsk_demodulated", {}).get("x", [])
+                
+
+                # 隐藏波形图，显示文本区域
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+
+                # 显示原始输入文本
+                input_text = self.datas.get("input_text", {}).get("x", "")
+                self.ui.text1.setText(str(input_text))
+                
+                bits = BitArray(demod_data)
+                print("QPSK解调比特数量:", len(demod_data))
+                demod_bytes = bits.tobytes()
+               
+
+                def parse_protocol_header(header: bytes, checksum_method: str = "sha256") -> str:
+                    """
+                    将协议 header 解析为 HTML 格式字符串，支持彩色显示各字段
+                    使用新版协议格式（timestamp 为 8 字节）
+                    """
+
+                    header_format = "!B16s16sQI32sBBI"
+                    header_size = struct.calcsize(header_format)
+                    if len(header) < header_size:
+                        return "<span style='color:red;'>Header 长度不足，无法解析。</span>"
+
+                    unpacked = struct.unpack(header_format, header[:header_size])
+
+                    version, source, dest, timestamp, data_len, checksum, priority, data_type, sequence = unpacked
+                    source = source.rstrip(b'\x00').decode('utf-8')
+                    dest = dest.rstrip(b'\x00').decode('utf-8')
+                    checksum_hex = binascii.hexlify(checksum).decode('utf-8')
+                    time_str = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+                    html = f"""
+                    <b>🌐 Protocol Header ({checksum_method.upper()}, {header_size} bytes):</b><br>
+                    <span style="color:red;">Version:</span> {version}<br>
+                    <span style="color:blue;">Source:</span> {source}<br>
+                    <span style="color:green;">Destination:</span> {dest}<br>
+                    <span style="color:orange;">Timestamp:</span> {timestamp} <i>({time_str})</i><br>
+                    <span style="color:purple;">Data Length:</span> {data_len} bytes<br>
+                    <span style="color:brown;">Checksum ({checksum_method}):</span><br>
+                    <code style="color:#444;">{checksum_hex}</code><br>
+                    <span style="color:teal;">Priority:</span> {priority}<br>
+                    <span style="color:darkcyan;">Data Type:</span> {data_type}<br>
+                    <span style="color:gray;">Sequence:</span> {sequence}
+            
+                    """
+                    return html        
+                self.ui.text2.setHtml(parse_protocol_header(self.datas["packed_data"]["x"], self.wrapper_method))
+
+
+            elif self.analog_input_type == "VOICE":
+                demod_data = self.datas.get("qpsk_demodulated", {}).get("x", [])
+                # 此处可根据语音处理逻辑进一步解码音频（如果需要）
+                print("QPSK语音解调比特数量:", len(demod_data))
+                self.showPlt1(True)
+                self.showPlt2(False)
+                self.ui.text1.hide()
+                self.ui.text2.show()
+                bits = BitArray(demod_data)
+                demod_bytes = bits.tobytes()
+                # 打印信息供调试用
+                print("QPSK解调比特数量:", len(demod_data))
+                print("转换后的字节数量:", len(demod_bytes))
+                
+                def parse_protocol_header(header: bytes, checksum_method: str = "sha256") -> str:
+                    """
+                    将协议 header 解析为 HTML 格式字符串，支持彩色显示各字段
+                    使用新版协议格式（timestamp 为 8 字节）
+                    """
+
+                    header_format = "!B16s16sQI32sBBI"
+                    header_size = struct.calcsize(header_format)
+                    if len(header) < header_size:
+                        return "<span style='color:red;'>Header 长度不足，无法解析。</span>"
+
+                    unpacked = struct.unpack(header_format, header[:header_size])
+
+                    version, source, dest, timestamp, data_len, checksum, priority, data_type, sequence = unpacked
+                    source = source.rstrip(b'\x00').decode('utf-8')
+                    dest = dest.rstrip(b'\x00').decode('utf-8')
+                    checksum_hex = binascii.hexlify(checksum).decode('utf-8')
+                    time_str = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+                    html = f"""
+                    <b>🌐 Protocol Header ({checksum_method.upper()}, {header_size} bytes):</b><br>
+                    <span style="color:red;">Version:</span> {version}<br>
+                    <span style="color:blue;">Source:</span> {source}<br>
+                    <span style="color:green;">Destination:</span> {dest}<br>
+                    <span style="color:orange;">Timestamp:</span> {timestamp} <i>({time_str})</i><br>
+                    <span style="color:purple;">Data Length:</span> {data_len} bytes<br>
+                    <span style="color:brown;">Checksum ({checksum_method}):</span><br>
+                    <code style="color:#444;">{checksum_hex}</code><br>
+                    <span style="color:teal;">Priority:</span> {priority}<br>
+                    <span style="color:darkcyan;">Data Type:</span> {data_type}<br>
+                    <span style="color:gray;">Sequence:</span> {sequence}
+            
+                    """
+                    return html        
+                # 你可以根据解调数据还原语音波形等形式展示
+                # 示例占位：
+                self.ui.text2.setHtml(parse_protocol_header(self.datas["packed_data"]["x"], self.wrapper_method))
+        
+
             
          
                 

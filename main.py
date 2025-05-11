@@ -328,12 +328,44 @@ class MainWindow(QMainWindow):
                         self.watcher_window.datas["bpsk_demodulated"]["x"] = bpsk_demodulated_data
                         self.watcher_window.ui.watcherSelect.addItem("bpsk_demodulated")
                  if self.modulation_method == "qpsk":
-                    self.add_log("QPSK demodulation...")
-                    print("解QPSK调制")
                     if self.watcher_window.analog_input_type == "TEXT":
-                        qpsk_modulated_data = self.watcher_window.datas["qpsk_modulated"]["x"]
+                        qpsk_modulated_data = self.watcher_window.datas.get("qpsk_modulated", {}).get("x", [])
+                        
 
-                    
+
+                    # 执行 QPSK 解调
+                        qpsk_demodulated_data = qpsk.qpsk_demodulate(qpsk_modulated_data)
+                        print("QPSK解调后的比特长度:", len(qpsk_demodulated_data))
+                        
+
+
+                    # 保存解调后的数据
+                        ensure_data_key(self.watcher_window.datas, "qpsk_demodulated")
+                        self.watcher_window.datas["qpsk_demodulated"]["x"] = qpsk_demodulated_data
+
+                    # 添加到观察器选择列表
+                        self.watcher_window.ui.watcherSelect.addItem("qpsk_demodulated")
+
+                    elif self.watcher_window.analog_input_type == "VOICE":
+                        qpsk_modulated_data = self.watcher_window.datas.get("qpsk_modulated", {}).get("x", [])
+
+                        # ✅ 提取调制数据的幅值
+                        if isinstance(qpsk_modulated_data, np.ndarray) and qpsk_modulated_data.ndim == 2:
+                            signal_only = qpsk_modulated_data[:, 1]
+                        else:
+                            signal_only = np.array(qpsk_modulated_data)
+
+                        # 执行 QPSK 解调
+                        qpsk_demodulated_data = qpsk.qpsk_demodulate(signal_only)
+                        print("QPSK语音解调后比特长度:", len(qpsk_demodulated_data))
+
+                     # 保存解调数据
+                        ensure_data_key(self.watcher_window.datas, "qpsk_demodulated")
+                        self.watcher_window.datas["qpsk_demodulated"]["x"] = qpsk_demodulated_data
+
+                    # 添加到观察器选择列表
+                        self.watcher_window.ui.watcherSelect.addItem("qpsk_demodulated")
+
 
 
 
