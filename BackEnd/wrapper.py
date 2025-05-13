@@ -93,17 +93,28 @@ def unpack_protocol(
     unpacked = struct.unpack(_HEADER_FORMAT, header)
     version = unpacked[0]
     source = unpacked[1].decode('utf-8').rstrip('\x00')
-    destination = unpacked[2].decode('utf-8').rstrip('\x00')# 去除字符串右侧的填充字符 \x00
+    destination = unpacked[2].decode('utf-8').rstrip('\x00')
     timestamp = unpacked[3]
     data_length = unpacked[4]
     checksum = unpacked[5]
     priority = unpacked[6]
     data_type = unpacked[7]
     sequence = unpacked[8]
+
     if len(data) != data_length:
         raise ProtocolError("数据长度不匹配")
     if _checksum(data, checksum_method) != checksum:
         raise ProtocolError("数据校验和错误")
+
+    # 尝试解码
+    if decode:
+        try:
+            data_decoded = data.decode('utf-8')
+        except UnicodeDecodeError:
+            data_decoded = f"<Binary {len(data)} bytes - 非UTF8可解码>"
+    else:
+        data_decoded = data
+
     result = {
         "version": version,
         "source": source,
@@ -114,9 +125,10 @@ def unpack_protocol(
         "priority": priority,
         "data_type": data_type,
         "sequence": sequence,
-        "data": data.decode('utf-8') if decode else data
+        "data": data_decoded
     }
     return result
+
 
 def unpack_protocol_to_json(packet: bytes, checksum_method: str = "sha256") -> str:
     """

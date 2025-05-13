@@ -423,9 +423,74 @@ class WatcherWindow(QWidget):
             
                     """
                     return html        
-                # 你可以根据解调数据还原语音波形等形式展示
-                # 示例占位：
+                
                 self.ui.text2.setHtml(parse_protocol_header(self.datas["packed_data"]["x"], self.wrapper_method))
+        elif value == "dewrapper_data":
+            if self.analog_input_type == "TEXT":
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+                text_data = self.datas.get("input_text", {}).get("x", "")
+                self.ui.text1.setText(str(text_data))
+                
+                hex_raw = binascii.hexlify(text_data.encode('utf-8')).decode('utf-8').upper()
+                hex_str = ' '.join(hex_raw[i:i+2] for i in range(0, len(hex_raw), 2))
+                self.ui.text2.setText(hex_str)
+            elif self.analog_input_type == "VOICE":
+                self.showPlt1(True)
+                self.showPlt2(True)
+                self.ui.text1.hide()
+                self.ui.text2.hide()
+                # 更新图表
+                voice_data_ana = self.datas.get("voice_analog", {})
+                x_data1 = voice_data_ana.get("x", [])
+                y_data1 = voice_data_ana.get("y", [])
+                data_size1 = self.datas["voice_analog"]["DSPF"]
+
+                voice_data_dis = self.datas.get("voice", {})
+                x_data2 = voice_data_dis.get("x", [])
+                y_data2 = voice_data_dis.get("y", [])
+                data_size2 = self.datas["voice"]["DSPF"]
+
+                self.widgetPlot1(x_data1[0:data_size1], y_data1[0:data_size1], "ANALOG")
+                self.widgetPlot2(x_data2[0:data_size2], y_data2[0:data_size2], "DIGITAL")
+        elif value == "dac_data":   
+            if self.analog_input_type == "TEXT":
+                self.showPlt1(False)
+                self.showPlt2(False)
+                self.ui.text1.show()
+                self.ui.text2.show()
+                text_data = self.datas.get("input_text", {}).get("x", "")
+                
+                hex_raw = binascii.hexlify(text_data.encode('utf-8')).decode('utf-8').upper()
+                hex_str = ' '.join(hex_raw[i:i+2] for i in range(0, len(hex_raw), 2))
+                self.ui.text1.setText(hex_str)
+                raw_bytes = bytes.fromhex(hex_str)
+                text = raw_bytes.decode("utf-8")
+                self.ui.text2.setText(str(text))
+            elif self.analog_input_type == "VOICE":
+                self.showPlt1(True)
+                self.showPlt2(True)
+                self.ui.text1.hide()
+                self.ui.text2.hide()
+                # 更新图表
+                voice_data_ana = self.datas.get("voice_analog", {})
+                x_data1 = voice_data_ana.get("x", [])
+                y_data1 = voice_data_ana.get("y", [])
+                data_size1 = self.datas["voice_analog"]["DSPF"]
+
+                voice_data_dis = self.datas.get("voice", {})
+                x_data2 = voice_data_dis.get("x", [])
+                y_data2 = voice_data_dis.get("y", [])
+                data_size2 = self.datas["voice"]["DSPF"]
+
+                self.widgetPlot2(x_data1[0:data_size1], y_data1[0:data_size1], "ANALOG")
+                self.widgetPlot1(x_data2[0:data_size2], y_data2[0:data_size2], "DIGITAL")
+
+
+               
+
         
 
             

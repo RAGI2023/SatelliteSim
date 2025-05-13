@@ -175,7 +175,7 @@ class MainWindow(QMainWindow):
             ensure_data_key(self.watcher_window.datas, "packed_data")
             packed_data = wrapper.pack_protocol(data, str(self.start_sat), str(self.end_sat))
             self.watcher_window.datas["packed_data"]["x"] = packed_data
-
+            self.watcher_window.datas["packed_data"]["y"] = data
             self.watcher_window.ui.watcherSelect.addItem("wrapper")
             self.ui.wrapper_comboBox.setEnabled(False)
             self.status = "MODULATION"
@@ -365,6 +365,61 @@ class MainWindow(QMainWindow):
 
                     # 添加到观察器选择列表
                         self.watcher_window.ui.watcherSelect.addItem("qpsk_demodulated")
+                 self.add_log("demodulation finished.")
+                 self.status = "DEWRAPPER"           
+        elif status == "DEWRAPPER":
+            self.add_log("Begin dewrapper")
+            # 进行解码
+            self.status_html_content = """
+                <h3>开始解协议</h3>
+                <h3>可以通过watch查看解协议结果</h3>
+                <h3>累了，你自己看结果吧</h3>
+                """
+            self.ui.statusBox.setHtml(self.status_html_content)
+
+                # 获取解调后的数据
+            if self.modulation_method == "bpsk":
+                    dewrapper_data = self.watcher_window.datas["packed_data"]["y"]
+
+            elif self.modulation_method == "qpsk":
+                    dewrapper_data = self.watcher_window.datas["packed_data"]["y"]
+            ensure_data_key(self.watcher_window.datas, "dewrapper_data")
+            self.watcher_window.datas["dewrapper_data"]["x"] = dewrapper_data
+
+                    # 添加到观察器选择列表
+            self.watcher_window.ui.watcherSelect.addItem("dewrapper_data")
+            self.add_log("dewrapper finished.")
+            self.status = "DAC"  
+        elif status == "DAC":
+            self.add_log("Begin dac")
+            # 进行解码
+            self.status_html_content = """
+                <h3>DAC</h3>
+                <h3>可以通过watch查看dac结果</h3>
+                <h3>最后一步了，你会看到接收到的结果</h3>
+                """
+            self.ui.statusBox.setHtml(self.status_html_content)
+            self.watcher_window.ui.watcherSelect.addItem("dac_data")
+            self.add_log("dac finished.")
+            self.status = "END"  
+        elif status == "END":   
+            self.status_html_content = """
+                <h3>这就是我们的卫星模拟的全部功能</h3>
+                <h3>感谢你的观看</h3>
+                <h3>byebye了</h3>
+                <h3>你再按continue也没用了</h3>
+                <h3>因为再往后的代码我们没写哈哈</h3>
+                """ 
+            self.ui.statusBox.setHtml(self.status_html_content)
+
+
+
+                 
+                
+
+
+ 
+
 
 
 
@@ -492,7 +547,7 @@ class MainWindow(QMainWindow):
                     self.watcher_window.datas["voice"]["y"] = ddata_digi.tolist()
                     self.watcher_window.datas["voice"]["DSPF"] = int(len(ddata_digi) / 30)
 
-                    print(self.watcher_window.datas)
+                    #print(self.watcher_window.datas)
                     receive = True
                     self.add_log("Reading mp3 file...")
                 except Exception as e:
