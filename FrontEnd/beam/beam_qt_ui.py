@@ -2,7 +2,7 @@ import sys
 import random  # 新增随机模块
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QTableWidget, QTableWidgetItem, QLabel, QLineEdit, QSpinBox, QMessageBox, QSlider,
+    QTableWidget, QTableWidgetItem, QLabel, QLineEdit, QSpinBox, QMessageBox, QSlider,QCheckBox,
     QGroupBox  # 新增：导入QGroupBox
 )
 from PyQt5.QtGui import QDoubleValidator
@@ -17,8 +17,8 @@ class BeamControlUI(QWidget):
         # 修改n_beams为60（10站点×6波束）
         self.bcs = BeamControlSystem(
             n_beams=60,  # 关键修改：总波束数=10站点×6波束
-            beam_radius=100000, 
-            max_users_per_beam=50000, 
+            beam_radius=100000,
+            max_users_per_beam=50000,
             freq_list=[800, 1800, 2600]
         )
         self.init_test_data()
@@ -146,11 +146,78 @@ class BeamControlUI(QWidget):
         auto_btn_layout.addWidget(auto_power_btn)
         status_layout.addLayout(auto_btn_layout)
 
+        # 在 init_ui 方法中添加以下代码
+
+        # 波束控制区
+        beam_control_group = QGroupBox("波束控制")
+        beam_control_layout = QVBoxLayout()
+
+        # 波束ID输入
+        beam_id_layout = QHBoxLayout()
+        beam_id_layout.addWidget(QLabel("Beam ID:"))
+        self.beam_id_input = QSpinBox()
+        self.beam_id_input.setRange(0, 59)  # 假设总波束数为60
+        beam_id_layout.addWidget(self.beam_id_input)
+        beam_control_layout.addLayout(beam_id_layout)
+
+        # 开关控制
+        beam_active_layout = QHBoxLayout()
+        self.beam_active_checkbox = QCheckBox("开启/关闭")
+        toggle_active_btn = QPushButton("应用")
+        toggle_active_btn.clicked.connect(self.toggle_beam_active)
+        beam_active_layout.addWidget(self.beam_active_checkbox)
+        beam_active_layout.addWidget(toggle_active_btn)
+        beam_control_layout.addLayout(beam_active_layout)
+
+        # 角度和宽度设置
+        beam_params_layout = QHBoxLayout()
+        beam_params_layout.addWidget(QLabel("角度(°):"))
+        self.azimuth_input = QLineEdit()
+        self.azimuth_input.setValidator(QDoubleValidator(0.0, 360.0, 1))
+        beam_params_layout.addWidget(self.azimuth_input)
+        beam_params_layout.addWidget(QLabel("宽度(°):"))
+        self.beamwidth_input = QLineEdit()
+        self.beamwidth_input.setValidator(QDoubleValidator(0.0, 360.0, 1))
+        beam_params_layout.addWidget(self.beamwidth_input)
+        set_params_btn = QPushButton("设置参数")
+        set_params_btn.clicked.connect(self.set_beam_parameters)
+        beam_params_layout.addWidget(set_params_btn)
+        beam_control_layout.addLayout(beam_params_layout)
+
+        beam_control_group.setLayout(beam_control_layout)
+        main_layout.addWidget(beam_control_group)
+
         status_group.setLayout(status_layout)
         main_layout.addWidget(status_group)
 
         self.setLayout(main_layout)
         self.refresh_tables()  # 刷新表格
+
+    # 在 BeamControlUI 类中添加以下方法
+
+    def toggle_beam_active(self):
+        """开启或关闭指定波束"""
+        try:
+            beam_id = self.beam_id_input.value()
+            active = self.beam_active_checkbox.isChecked()
+            self.bcs.set_beam_active(beam_id, active)
+            self.refresh_tables()
+            QMessageBox.information(self, "成功", f"Beam {beam_id} 已{'开启' if active else '关闭'}")
+        except Exception as e:
+            QMessageBox.warning(self, "操作失败", str(e))
+
+    def set_beam_parameters(self):
+        """设置波束的宽度和角度"""
+        try:
+            beam_id = self.beam_id_input.value()
+            azimuth = float(self.azimuth_input.text())
+            beamwidth = float(self.beamwidth_input.text())
+            self.bcs.set_beam_azimuth(beam_id, azimuth)
+            self.bcs.set_beam_beamwidth(beam_id, beamwidth)
+            self.refresh_tables()
+            QMessageBox.information(self, "成功", f"Beam {beam_id} 参数已更新：角度={azimuth}°，宽度={beamwidth}°")
+        except Exception as e:
+            QMessageBox.warning(self, "设置失败", str(e))
 
     def init_test_data(self):
         """初始化测试用户和波束位置（使用真实分布）"""
@@ -158,7 +225,7 @@ class BeamControlUI(QWidget):
         realistic_users = BeamDataManager.generate_realistic_users(1000)
         for uid, (lat, lon) in enumerate(realistic_users, start=1000):
             self.bcs.add_user(uid, (lat, lon))
-        
+
         # 获取优化的站点中心（10个）
         optimized_centers = BeamDataManager.get_optimized_beam_centers()
         # 为每个站点的6个波束设置相同中心（总波束数60，站点数10）
@@ -166,7 +233,7 @@ class BeamControlUI(QWidget):
             for beam_in_site in range(6):
                 beam_id = site_idx * 6 + beam_in_site
                 self.bcs.set_beam_center(beam_id, (lat, lon))  # 6个波束共享站点中心
-        
+
         self.bcs.assign_users_to_beams()
 
     def refresh_tables(self):
@@ -189,7 +256,7 @@ class BeamControlUI(QWidget):
             self.user_table.setItem(i, 0, QTableWidgetItem(str(u["user_id"])))
             self.user_table.setItem(i, 1, QTableWidgetItem(f"({u['pos'][0]:.2f}, {u['pos'][1]:.2f})"))
             self.user_table.setItem(i, 2, QTableWidgetItem(str(u["connected_beam"])))
-            
+
             # 计算用户到连接波束中心的距离
             if u["connected_beam"] is not None and u["connected_beam"] in self.bcs.beams:
                 beam = self.bcs.beams[u["connected_beam"]]
@@ -197,6 +264,9 @@ class BeamControlUI(QWidget):
                 self.user_table.setItem(i, 3, QTableWidgetItem(f"{distance:.1f}"))
             else:
                 self.user_table.setItem(i, 3, QTableWidgetItem("无连接"))
+        self.beam_table.setItem(i, 5, QTableWidgetItem(f"{b['azimuth']:.1f}"))  # 显示角度
+        self.beam_table.setItem(i, 6, QTableWidgetItem(f"{b['beamwidth']:.1f}"))  # 显示宽度
+        self.beam_table.setItem(i, 7, QTableWidgetItem("开启" if b["active"] else "关闭"))  # 显示开关状态
 
     def random_add_user(self):
         """随机生成用户并自动填充输入框"""
@@ -256,7 +326,7 @@ class BeamControlUI(QWidget):
             uid = self.user_id_input.value()
             lat = float(self.lat_input.text())
             lon = float(self.lon_input.text())
-            
+
             # 调用后端添加用户
             self.bcs.add_user(uid, (lat, lon))
             self.bcs.assign_users_to_beams()  # 重新分配波束
@@ -294,7 +364,7 @@ class BeamControlUI(QWidget):
             msg = "检测到以下频率复用冲突（距离小于覆盖半径和）:\n"
             for a, b, f, d in conflicts:
                 msg += f"Beam {a} 与 Beam {b}（频率 {f}MHz）距离 {d:.1f}km\n"
-            
+
             # 弹出警告并高亮冲突波束
             QMessageBox.warning(self, "冲突警告", msg)
             self.highlight_conflict_beams(conflicts)
@@ -305,7 +375,7 @@ class BeamControlUI(QWidget):
         for a, b, _, _ in conflicts:
             conflict_ids.add(a)
             conflict_ids.add(b)
-        
+
         for row in range(self.beam_table.rowCount()):
             beam_id = int(self.beam_table.item(row, 0).text())
             for col in range(self.beam_table.columnCount()):
